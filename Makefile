@@ -12,5 +12,8 @@ train:
 test:
 	pytest -q
 
+serve:
+	uvicorn trinetra.api.app:app --reload --port 8080
+
 lint:
 	ruff check src tests
