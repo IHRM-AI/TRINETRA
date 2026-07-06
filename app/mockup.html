@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRINETRA — MSME Early-Warning Risk Cockpit · IDBI Bank</title>
+<style>
+  :root{
+    --bg:#080F1C;
+    --panel:#0E1930;
+    --panel-2:#0C1527;
+    --line:#1D2C47;
+    --line-soft:#182640;
+    --text:#E7EEF9;
+    --muted:#8FA1BE;
+    --faint:#5B6C8C;
+    --teal:#2DD4BF;
+    --teal-dim:#1CA695;
+    --amber:#FFB454;
+    --red:#F26D7E;
+    --red-deep:#E5586D;
+    --idbi:#00836C;
+    --idbi-bright:#10A385;
+    --chip-bg:#13223B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:13px;
+    font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(900px 420px at 75% -10%, rgba(0,131,108,.10), transparent 60%),
+      radial-gradient(700px 380px at 15% -8%, rgba(45,212,191,.06), transparent 60%);
+  }
+
+  /* ---------- LEFT NAV ---------- */
+  .sidenav{
+    position:fixed;top:0;left:0;bottom:0;width:216px;z-index:20;
+    background:linear-gradient(180deg,#0B1526 0%,#091120 100%);
+    border-right:1px solid var(--line-soft);
+    display:flex;flex-direction:column;padding:18px 14px 14px;
+  }
+  .logo{display:flex;align-items:center;gap:10px;padding:2px 6px 16px;border-bottom:1px solid var(--line-soft);}
+  .logo-mark{width:36px;height:36px;flex:none;}
+  .logo-name{font-size:16px;font-weight:700;letter-spacing:.14em;}
+  .logo-sub{font-size:9px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+  .nav{margin-top:14px;display:flex;flex-direction:column;gap:2px;}
+  .nav-label{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:6px 10px 6px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;
+    color:var(--muted);cursor:pointer;position:relative;font-size:12.5px;font-weight:500;
+    transition:background .15s,color .15s;
+  }
+  .nav-item svg{width:16px;height:16px;flex:none;stroke:currentColor;}
+  .nav-item:hover{background:#101E36;color:var(--text);}
+  .nav-item.active{background:linear-gradient(90deg,rgba(0,131,108,.22),rgba(0,131,108,.05));color:var(--text);}
+  .nav-item.active::before{
+    content:"";position:absolute;left:-14px;top:7px;bottom:7px;width:3px;border-radius:0 3px 3px 0;
+    background:var(--idbi-bright);
+  }
+  .nav-badge{margin-left:auto;background:rgba(242,109,126,.16);color:var(--red);font-size:10px;font-weight:700;
+    padding:1px 7px;border-radius:9px;border:1px solid rgba(242,109,126,.28);}
+  .side-bottom{margin-top:auto;display:flex;flex-direction:column;gap:10px;}
+  .model-card{
+    background:var(--panel-2);border:1px solid var(--line-soft);border-radius:9px;padding:10px 11px;
+  }
+  .model-card .mc-title{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+  .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px rgba(45,212,191,.8);}
+  .model-card .mc-row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:6px;}
+  .model-card .mc-row b{color:var(--text);font-weight:600;}
+  .cobrand{display:flex;align-items:center;gap:8px;padding:4px 6px;color:var(--faint);font-size:9.5px;letter-spacing:.05em;}
+  .cobrand .sq{width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,var(--idbi),var(--idbi-bright));flex:none;}
+
+  /* ---------- MAIN / TOP BAR ---------- */
+  .main{margin-left:216px;position:relative;z-index:1;}
+  .topbar{
+    height:54px;display:flex;align-items:center;gap:18px;padding:0 20px;
+    border-bottom:1px solid var(--line-soft);
+    background:rgba(8,15,28,.86);backdrop-filter:blur(8px);
+    position:sticky;top:0;z-index:15;
+  }
+  .tb-title{display:flex;flex-direction:column;gap:1px;min-width:0;}
+  .tb-crumb{font-size:9.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;}
+  .tb-h1{font-size:15px;font-weight:650;letter-spacing:.01em;white-space:nowrap;}
+  .tb-live{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);
+    background:var(--chip-bg);border:1px solid var(--line-soft);border-radius:20px;padding:4px 11px;}
+  .search{
+    margin-left:auto;display:flex;align-items:center;gap:8px;width:284px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 11px;color:var(--faint);
+    transition:border-color .15s;
+  }
+  .search:focus-within{border-color:var(--idbi-bright);}
+  .search svg{width:14px;height:14px;stroke:var(--faint);flex:none;}
+  .search input{background:none;border:none;outline:none;color:var(--text);font-size:12px;width:100%;}
+  .search input::placeholder{color:var(--faint);}
+  .search .kbd{font-size:9.5px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--faint);}
+  .tb-bell{position:relative;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);display:flex;
+    align-items:center;justify-content:center;cursor:pointer;background:var(--panel-2);}
+  .tb-bell svg{width:16px;height:16px;stroke:var(--muted);}
+  .tb-bell::after{content:"";position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:50%;
+    background:var(--red);border:1.5px solid var(--bg);}
+  .userchip{display:flex;align-items:center;gap:9px;padding:5px 10px 5px 6px;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel-2);cursor:pointer;}
+  .avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--idbi),#0FA88B);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#EAFFF9;}
+  .uc-name{font-size:11.5px;font-weight:600;line-height:1.15;}
+  .uc-role{font-size:9.5px;color:var(--faint);line-height:1.2;}
+
+  /* ---------- CONTENT GRID ---------- */
+  .content{padding:14px 20px 20px;display:flex;flex-direction:column;gap:14px;}
+  .panel{
+    background:linear-gradient(180deg,#101C31 0%,#0D1728 100%);
+    border:1px solid var(--line);border-radius:11px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 24px -18px rgba(0,0,0,.8);
+    display:flex;flex-direction:column;min-width:0;
+  }
+  .p-head{display:flex;align-items:baseline;gap:10px;padding:12px 14px 8px;}
+  .p-title{font-size:12.5px;font-weight:650;letter-spacing:.02em;}
+  .p-sub{font-size:10px;color:var(--faint);}
+  .p-right{margin-left:auto;font-size:10px;color:var(--faint);white-space:nowrap;}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .kpi{
+    background:linear-gradient(180deg,#101C31,#0D1728);border:1px solid var(--line);border-radius:11px;
+    padding:12px 15px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden;
+  }
+  .kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--kc,var(--teal));opacity:.85;}
+  .kpi-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .kpi-value{font-size:23px;font-weight:700;letter-spacing:-.01em;line-height:1.15;}
+  .kpi-value small{font-size:12px;font-weight:600;color:var(--muted);margin-left:4px;}
+  .kpi-sub{font-size:10.5px;color:var(--faint);}
+  .kpi-sub b{color:var(--teal);font-weight:600;}
+  .kpi-sub .up{color:var(--teal);} .kpi-sub .warn{color:var(--amber);}
+
+  .rowA{display:grid;grid-template-columns:57fr 43fr;gap:14px;height:342px;}
+  .rowB{display:grid;grid-template-columns:62fr 38fr;gap:14px;height:352px;}
+
+  /* ---------- HEATMAP ---------- */
+  .hm-wrap{padding:4px 14px 10px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;}
+  .hm-grid{display:grid;grid-template-columns:158px repeat(5,1fr);gap:3px;flex:1;}
+  .hm-colhead{font-size:9.5px;color:var(--muted);text-align:center;align-self:end;padding-bottom:3px;letter-spacing:.03em;}
+  .hm-colhead b{color:var(--text);font-weight:650;font-size:10px;}
+  .hm-rowlab{display:flex;flex-direction:column;justify-content:center;padding-right:10px;min-width:0;}
+  .hm-rowlab .n{font-size:11px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hm-rowlab .e{font-size:9px;color:var(--faint);}
+  .hm-cell{
+    border-radius:5px;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:650;cursor:default;border:1px solid transparent;
+    transition:transform .12s,border-color .12s;
+  }
+  .hm-cell:hover{transform:scale(1.05);border-color:rgba(231,238,249,.35);z-index:2;}
+  .pd-vlow{background:rgba(45,212,191,.13);color:#8AE0CF;}
+  .pd-low{background:rgba(154,214,120,.12);color:#BFE39A;}
+  .pd-mid{background:rgba(255,180,84,.14);color:#FFCF8F;}
+  .pd-high{background:rgba(255,122,61,.17);color:#FFB08A;}
+  .pd-crit{background:rgba(242,109,126,.19);color:#FF9AA8;}
+  .pd-crit2{background:rgba(242,109,126,.34);color:#FFB9C3;}
+  .hm-legend{display:flex;align-items:center;gap:12px;font-size:9.5px;color:var(--faint);padding:0 2px;}
+  .hm-legend .lg{display:flex;align-items:center;gap:5px;}
+  .hm-legend .sw{width:10px;height:10px;border-radius:3px;}
+
+  /* ---------- CHART COMMON ---------- */
+  .chart-body{flex:1;min-height:0;padding:2px 10px 8px;display:flex;}
+  .chart-body svg{width:100%;height:100%;}
+  .ax{stroke:#22334F;stroke-width:1;}
+  .grid-l{stroke:#16233C;stroke-width:1;}
+  .tick{fill:var(--faint);font-size:9px;}
+  .ax-title{fill:var(--faint);font-size:9.5px;letter-spacing:.04em;}
+
+  /* ---------- DRILL-DOWN ---------- */
+  .dd-head{display:flex;align-items:center;gap:10px;padding:12px 14px 6px;flex-wrap:wrap;}
+  .dd-name{font-size:14px;font-weight:700;}
+  .dd-meta{font-size:10px;color:var(--faint);}
+  .chip{font-size:9.5px;font-weight:650;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.02em;}
+  .chip-amber{background:rgba(255,180,84,.13);color:var(--amber);border:1px solid rgba(255,180,84,.35);}
+  .chip-red{background:rgba(242,109,126,.13);color:var(--red);border:1px solid rgba(242,109,126,.32);}
+  .chip-teal{background:rgba(45,212,191,.11);color:var(--teal);border:1px solid rgba(45,212,191,.3);}
+  .chip-slate{background:var(--chip-bg);color:var(--muted);border:1px solid var(--line);}
+  .dd-body{flex:1;min-height:0;display:grid;grid-template-columns:54fr 46fr;gap:0;}
+  .dd-col{display:flex;flex-direction:column;min-width:0;padding:2px 12px 10px 14px;}
+  .dd-col + .dd-col{border-left:1px solid var(--line-soft);padding-left:16px;padding-right:14px;}
+  .dd-col-title{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:4px 0 2px;}
+  .dd-col-sub{font-size:9px;color:var(--faint);margin-bottom:2px;}
+  .dd-chart{flex:1;min-height:0;}
+  .dd-chart svg{width:100%;height:100%;}
+
+  /* SHAP waterfall */
+  .shap{display:flex;flex-direction:column;gap:6px;margin-top:5px;flex:1;}
+  .shap-row{display:flex;flex-direction:column;gap:2px;}
+  .shap-lab{display:flex;justify-content:space-between;align-items:baseline;font-size:10.3px;color:#C6D2E6;gap:8px;}
+  .shap-lab .v{font-weight:700;font-size:10.5px;white-space:nowrap;}
+  .v.pos{color:var(--red);} .v.neg{color:var(--teal);} .v.tot{color:var(--text);}
+  .shap-track{height:9px;border-radius:3px;background:#111E35;position:relative;overflow:hidden;}
+  .shap-bar{position:absolute;top:0;bottom:0;border-radius:3px;}
+  .sb-base{background:#3A4A68;}
+  .sb-pos{background:linear-gradient(90deg,#A34255,#E5586D);}
+  .sb-neg{background:linear-gradient(90deg,#1CA695,#2DD4BF);}
+  .sb-tot{background:linear-gradient(90deg,#8A5A32,#FFB454);}
+  .shap-note{font-size:9px;color:var(--faint);margin-top:2px;}
+
+  /* ---------- MEMO ---------- */
+  .memo-badge{display:inline-flex;align-items:center;gap:6px;font-size:9px;color:#B9A0FF;
+    background:rgba(147,112,255,.10);border:1px solid rgba(147,112,255,.3);border-radius:20px;padding:3px 9px;font-weight:600;letter-spacing:.02em;}
+  .memo-badge .dot{width:5px;height:5px;border-radius:50%;background:#B9A0FF;}
+  .memo-body{flex:1;min-height:0;overflow:hidden;padding:6px 14px 8px;display:flex;flex-direction:column;gap:7px;font-size:10.8px;line-height:1.45;color:#C9D5E8;}
+  .memo-sec b.k{display:block;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-bottom:1px;font-weight:650;}
+  .memo-sec .news{color:var(--amber);font-style:italic;}
+  .memo-sec .act{color:var(--teal);font-weight:650;}
+  .memo-status{font-size:9.5px;color:var(--faint);padding:0 14px 2px;}
+  .memo-status.ok{color:var(--teal);}
+  .memo-actions{display:flex;gap:8px;padding:8px 14px 13px;align-items:center;}
+  .btn{font-size:11px;font-weight:650;border-radius:7px;padding:7px 13px;cursor:pointer;border:1px solid transparent;
+    font-family:inherit;transition:filter .15s,background .15s;}
+  .btn-primary{background:linear-gradient(180deg,#0A9B80,var(--idbi));color:#EAFFF9;box-shadow:0 4px 14px -6px rgba(0,163,133,.55);}
+  .btn-primary:hover{filter:brightness(1.12);}
+  .btn-outline{background:transparent;color:var(--text);border-color:var(--line);}
+  .btn-outline:hover{background:#13223B;}
+  .btn-ghost{background:transparent;color:var(--faint);}
+  .btn-ghost:hover{color:var(--muted);}
+
+  /* ---------- ALERT TABLE ---------- */
+  table.alerts{width:100%;border-collapse:collapse;}
+  .alerts th{
+    text-align:left;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+    font-weight:600;padding:8px 14px;border-bottom:1px solid var(--line-soft);white-space:nowrap;
+  }
+  .alerts td{padding:9px 14px;border-bottom:1px solid #121F36;font-size:11.5px;vertical-align:middle;white-space:nowrap;}
+  .alerts tr:last-child td{border-bottom:none;}
+  .alerts tbody tr{cursor:pointer;transition:background .12s;}
+  .alerts tbody tr:hover{background:#101E36;}
+  .alerts tbody tr.sel{background:rgba(0,131,108,.08);box-shadow:inset 3px 0 0 var(--idbi-bright);}
+  .b-name{font-weight:600;font-size:11.8px;}
+  .b-sub{font-size:9.5px;color:var(--faint);margin-top:1px;}
+  .pd-cell{display:flex;align-items:center;gap:8px;}
+  .pd-num{font-weight:700;min-width:44px;}
+  .pd-bar{width:64px;height:5px;border-radius:3px;background:#111E35;overflow:hidden;}
+  .pd-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--red-deep));}
+  .trig{color:#C6D2E6;font-size:11px;}
+  .days{font-weight:650;}
+  .days small{color:var(--faint);font-weight:400;}
+  .act-chip{font-size:9.5px;font-weight:650;padding:3px 10px;border-radius:6px;cursor:pointer;display:inline-block;
+    transition:filter .12s;}
+  .act-chip:hover{filter:brightness(1.25);}
+  .ac-teal{background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.3);}
+  .ac-red{background:rgba(242,109,126,.12);color:var(--red);border:1px solid rgba(242,109,126,.3);}
+  .ac-slate{background:var(--chip-bg);color:var(--muted);border:1px solid var(--line);}
+
+  /* ---------- FOOTER ---------- */
+  .footer{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    border:1px solid var(--line-soft);border-radius:9px;background:var(--panel-2);
+    padding:9px 16px;font-size:10px;color:var(--faint);letter-spacing:.02em;text-align:center;
+  }
+  .footer svg{width:12px;height:12px;flex:none;}
+  .footer b{color:var(--muted);font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- ================= LEFT NAV ================= -->
+<aside class="sidenav">
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg1" x1="0" y1="0" x2="40" y2="40">
+          <stop offset="0" stop-color="#2DD4BF"/><stop offset="1" stop-color="#00836C"/>
+        </linearGradient>
+      </defs>
+      <path d="M20 3 L34 8.5 V19 C34 28.5 28 34.5 20 37.5 C12 34.5 6 28.5 6 19 V8.5 Z"
+            fill="rgba(0,131,108,.14)" stroke="url(#lg1)" stroke-width="2"/>
+      <polyline points="10.5,21.5 15,21.5 17.5,14.5 21.5,26.5 24,19 26,21.5 29.5,21.5"
+            fill="none" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <div class="logo-name">TRINETRA</div>
+      <div class="logo-sub">MSME Early-Warning</div>
+    </div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <div class="nav-label">Risk Cockpit</div>
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Portfolio
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      Watchlist
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+      Alerts <span class="nav-badge">24</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4.5"/></svg>
+      Reports
+    </div>
+  </nav>
+
+  <div class="side-bottom">
+    <div class="model-card">
+      <div class="mc-title"><span class="pulse-dot"></span> Model status</div>
+      <div class="mc-row"><span>PD zoo</span><b>v2.3 · 4 segments</b></div>
+      <div class="mc-row"><span>AUC (OOT)</span><b>0.91</b></div>
+      <div class="mc-row"><span>Last retrain</span><b>28 Jun ’26</b></div>
+      <div class="mc-row"><span>Drift</span><b style="color:var(--teal)">within band</b></div>
+    </div>
+    <div class="cobrand"><span class="sq"></span> IDBI BANK · EWS AUGMENTATION LAYER</div>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="tb-title">
+      <div class="tb-crumb">Portfolio · Risk Cockpit</div>
+      <div class="tb-h1">MSME Portfolio — Q1 FY27</div>
+    </div>
+    <div class="tb-live"><span class="pulse-dot"></span> Data as of 30 Jun 2026 · 04:12 IST batch</div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="Search borrower, PAN, GSTIN…">
+      <span class="kbd">⌘K</span>
+    </div>
+    <div class="tb-bell">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+    </div>
+    <div class="userchip">
+      <div class="avatar">RK</div>
+      <div>
+        <div class="uc-name">Credit Officer</div>
+        <div class="uc-role">Zonal Office Mumbai</div>
+      </div>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5B6C8C" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ============ 1. KPI STRIP ============ -->
+    <div class="kpis">
+      <div class="kpi" style="--kc:var(--idbi-bright)">
+        <div class="kpi-label">Accounts monitored</div>
+        <div class="kpi-value">12,847</div>
+        <div class="kpi-sub"><span class="up">▲ 214</span> onboarded this quarter · ₹18,412 Cr book</div>
+      </div>
+      <div class="kpi" style="--kc:var(--red)">
+        <div class="kpi-label">High-risk (PD &gt; 15%)</div>
+        <div class="kpi-value">312</div>
+        <div class="kpi-sub"><span class="warn">2.4% of book</span> · ₹1,986 Cr exposure at risk</div>
+      </div>
+      <div class="kpi" style="--kc:var(--amber)">
+        <div class="kpi-label">Est. provisions averted</div>
+        <div class="kpi-value">₹42.3<small>Cr</small></div>
+        <div class="kpi-sub">backtest replay · FY24–26 · 23 bps of book</div>
+      </div>
+      <div class="kpi" style="--kc:var(--teal)">
+        <div class="kpi-label">Model AUC</div>
+        <div class="kpi-value">0.91</div>
+        <div class="kpi-sub">out-of-time · 12-mo-ahead labels · KS 0.64</div>
+      </div>
+    </div>
+
+    <!-- ============ ROW A: HEATMAP + CAPTURE CURVE ============ -->
+    <div class="rowA">
+
+      <!-- 2. PORTFOLIO HEATMAP -->
+      <div class="panel">
+        <div class="p-head">
+          <div class="p-title">Portfolio heatmap</div>
+          <div class="p-sub">sector × risk grade · avg predicted 12-mo PD</div>
+          <div class="p-right">top 7 sectors by exposure</div>
+        </div>
+        <div class="hm-wrap">
+          <div class="hm-grid">
+            <div></div>
+            <div class="hm-colhead"><b>A</b> · &lt;2%</div>
+            <div class="hm-colhead"><b>B</b> · 2–5%</div>
+            <div class="hm-colhead"><b>C</b> · 5–10%</div>
+            <div class="hm-colhead"><b>D</b> · 10–15%</div>
+            <div class="hm-colhead"><b>E</b> · ≥15%</div>
+
+            <div class="hm-rowlab"><span class="n">Textiles &amp; Apparel</span><span class="e">₹412 Cr · 1,986 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Textiles & Apparel · Grade A · 812 a/c">1.2%</div>
+            <div class="hm-cell pd-low"  title="Textiles & Apparel · Grade B · 641 a/c">3.8%</div>
+            <div class="hm-cell pd-mid"  title="Textiles & Apparel · Grade C · 348 a/c">8.1%</div>
+            <div class="hm-cell pd-high" title="Textiles & Apparel · Grade D · 143 a/c">13.4%</div>
+            <div class="hm-cell pd-crit2" title="Textiles & Apparel · Grade E · 42 a/c">21.7%</div>
+
+            <div class="hm-rowlab"><span class="n">Auto Components</span><span class="e">₹387 Cr · 1,704 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Auto Components · Grade A · 742 a/c">0.9%</div>
+            <div class="hm-cell pd-low"  title="Auto Components · Grade B · 568 a/c">3.1%</div>
+            <div class="hm-cell pd-mid"  title="Auto Components · Grade C · 261 a/c">6.9%</div>
+            <div class="hm-cell pd-high" title="Auto Components · Grade D · 95 a/c">12.1%</div>
+            <div class="hm-cell pd-crit" title="Auto Components · Grade E · 38 a/c">18.2%</div>
+
+            <div class="hm-rowlab"><span class="n">Pharma &amp; Chemicals</span><span class="e">₹298 Cr · 1,238 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Pharma & Chemicals · Grade A · 587 a/c">0.8%</div>
+            <div class="hm-cell pd-low"  title="Pharma & Chemicals · Grade B · 402 a/c">2.6%</div>
+            <div class="hm-cell pd-mid"  title="Pharma & Chemicals · Grade C · 168 a/c">5.8%</div>
+            <div class="hm-cell pd-high" title="Pharma & Chemicals · Grade D · 57 a/c">10.9%</div>
+            <div class="hm-cell pd-crit" title="Pharma & Chemicals · Grade E · 24 a/c">16.1%</div>
+
+            <div class="hm-rowlab"><span class="n">Agro Processing</span><span class="e">₹276 Cr · 1,411 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Agro Processing · Grade A · 596 a/c">1.1%</div>
+            <div class="hm-cell pd-low"  title="Agro Processing · Grade B · 471 a/c">3.4%</div>
+            <div class="hm-cell pd-mid"  title="Agro Processing · Grade C · 224 a/c">7.3%</div>
+            <div class="hm-cell pd-high" title="Agro Processing · Grade D · 89 a/c">12.6%</div>
+            <div class="hm-cell pd-crit" title="Agro Processing · Grade E · 31 a/c">19.4%</div>
+
+            <div class="hm-rowlab"><span class="n">Steel &amp; Fabrication</span><span class="e">₹341 Cr · 1,092 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Steel & Fabrication · Grade A · 411 a/c">1.3%</div>
+            <div class="hm-cell pd-low"  title="Steel & Fabrication · Grade B · 359 a/c">4.1%</div>
+            <div class="hm-cell pd-mid"  title="Steel & Fabrication · Grade C · 186 a/c">8.6%</div>
+            <div class="hm-cell pd-high" title="Steel & Fabrication · Grade D · 92 a/c">13.8%</div>
+            <div class="hm-cell pd-crit2" title="Steel & Fabrication · Grade E · 44 a/c">22.3%</div>
+
+            <div class="hm-rowlab"><span class="n">Logistics &amp; Warehousing</span><span class="e">₹214 Cr · 927 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Logistics & Warehousing · Grade A · 448 a/c">0.7%</div>
+            <div class="hm-cell pd-low"  title="Logistics & Warehousing · Grade B · 301 a/c">2.9%</div>
+            <div class="hm-cell pd-mid"  title="Logistics & Warehousing · Grade C · 118 a/c">6.2%</div>
+            <div class="hm-cell pd-high" title="Logistics & Warehousing · Grade D · 39 a/c">11.3%</div>
+            <div class="hm-cell pd-crit" title="Logistics & Warehousing · Grade E · 21 a/c">16.8%</div>
+
+            <div class="hm-rowlab"><span class="n">Gems &amp; Jewellery</span><span class="e">₹189 Cr · 486 a/c</span></div>
+            <div class="hm-cell pd-vlow" title="Gems & Jewellery · Grade A · 172 a/c">1.4%</div>
+            <div class="hm-cell pd-low"  title="Gems & Jewellery · Grade B · 141 a/c">4.4%</div>
+            <div class="hm-cell pd-mid"  title="Gems & Jewellery · Grade C · 96 a/c">9.1%</div>
+            <div class="hm-cell pd-high" title="Gems & Jewellery · Grade D · 49 a/c">14.2%</div>
+            <div class="hm-cell pd-crit2" title="Gems & Jewellery · Grade E · 28 a/c">23.6%</div>
+          </div>
+          <div class="hm-legend">
+            <span>Predicted 12-mo PD</span>
+            <span class="lg"><span class="sw" style="background:rgba(45,212,191,.35)"></span>&lt;2%</span>
+            <span class="lg"><span class="sw" style="background:rgba(154,214,120,.35)"></span>2–5%</span>
+            <span class="lg"><span class="sw" style="background:rgba(255,180,84,.4)"></span>5–10%</span>
+            <span class="lg"><span class="sw" style="background:rgba(255,122,61,.45)"></span>10–15%</span>
+            <span class="lg"><span class="sw" style="background:rgba(242,109,126,.55)"></span>≥15%</span>
+            <span style="margin-left:auto">hover cell for a/c count</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. CAPTURE CURVE -->
+      <div class="panel">
+        <div class="p-head">
+          <div class="p-title">Default capture curve</div>
+          <div class="p-sub">out-of-time backtest · FY24–26</div>
+          <div class="p-right">n = 41,206 obs · 1,118 defaults</div>
+        </div>
+        <div class="chart-body">
+          <svg viewBox="0 0 500 288" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" font-family="inherit">
+            <!-- gridlines -->
+            <line class="grid-l" x1="46" y1="187" x2="478" y2="187"/>
+            <line class="grid-l" x1="46" y1="130" x2="478" y2="130"/>
+            <line class="grid-l" x1="46" y1="73"  x2="478" y2="73"/>
+            <line class="grid-l" x1="46" y1="16"  x2="478" y2="16"/>
+            <!-- axes -->
+            <line class="ax" x1="46" y1="244" x2="478" y2="244"/>
+            <line class="ax" x1="46" y1="16"  x2="46"  y2="244"/>
+            <!-- y ticks -->
+            <text class="tick" x="40" y="247" text-anchor="end">0</text>
+            <text class="tick" x="40" y="190" text-anchor="end">25</text>
+            <text class="tick" x="40" y="133" text-anchor="end">50</text>
+            <text class="tick" x="40" y="76"  text-anchor="end">75</text>
+            <text class="tick" x="40" y="19"  text-anchor="end">100</text>
+            <!-- x ticks -->
+            <text class="tick" x="46"    y="258" text-anchor="middle">0</text>
+            <text class="tick" x="132.4" y="258" text-anchor="middle">20</text>
+            <text class="tick" x="218.8" y="258" text-anchor="middle">40</text>
+            <text class="tick" x="305.2" y="258" text-anchor="middle">60</text>
+            <text class="tick" x="391.6" y="258" text-anchor="middle">80</text>
+            <text class="tick" x="478"   y="258" text-anchor="middle">100</text>
+            <text class="ax-title" x="262" y="276" text-anchor="middle">% of book flagged</text>
+            <text class="ax-title" x="14" y="130" text-anchor="middle" transform="rotate(-90 14 130)">defaults captured (%)</text>
+
+            <!-- random reference -->
+            <line x1="46" y1="244" x2="478" y2="16" stroke="#33445F" stroke-width="1" stroke-dasharray="2 4"/>
+
+            <!-- ML area fill -->
+            <path d="M46,244 L50.3,214.4 L54.6,189.3 L59,171 L63.3,155.1 L67.6,141.4 L80.6,111.8 L89.2,95.8 L110.8,66.2 L132.4,45.6 L154,37.7 L175.6,32 L218.8,25.1 L262,21.7 L305.2,19.4 L391.6,17.1 L478,16 L478,244 Z"
+                  fill="rgba(45,212,191,.06)" stroke="none"/>
+
+            <!-- baseline curve -->
+            <path d="M46,244 L89.2,216.6 L132.4,193.8 L175.6,173.3 L218.8,155.1 L262,136.8 L305.2,116.3 L391.6,73 L478,16"
+                  fill="none" stroke="#FFB454" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>
+
+            <!-- ML curve -->
+            <path d="M46,244 L50.3,214.4 L54.6,189.3 L59,171 L63.3,155.1 L67.6,141.4 L80.6,111.8 L89.2,95.8 L110.8,66.2 L132.4,45.6 L154,37.7 L175.6,32 L218.8,25.1 L262,21.7 L305.2,19.4 L391.6,17.1 L478,16"
+                  fill="none" stroke="#2DD4BF" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+            <!-- 20% flag-rate marker -->
+            <line x1="132.4" y1="16" x2="132.4" y2="244" stroke="#5B6C8C" stroke-width="1" stroke-dasharray="4 4"/>
+            <circle cx="132.4" cy="45.6" r="4" fill="#2DD4BF" stroke="#0D1728" stroke-width="1.5"/>
+            <circle cx="132.4" cy="193.8" r="4" fill="#FFB454" stroke="#0D1728" stroke-width="1.5"/>
+            <text x="126" y="34" text-anchor="end" fill="#2DD4BF" font-size="11.5" font-weight="700">87%</text>
+            <text x="140" y="209" text-anchor="start" fill="#FFB454" font-size="11.5" font-weight="700">22%</text>
+
+            <!-- annotation -->
+            <rect x="148" y="86" width="162" height="42" rx="7" fill="#0D1728" stroke="rgba(45,212,191,.45)" stroke-width="1"/>
+            <text x="229" y="104" text-anchor="middle" fill="#2DD4BF" font-size="11" font-weight="700">+65pp defaults caught</text>
+            <text x="229" y="119" text-anchor="middle" fill="#8FA1BE" font-size="9">the 16–22% problem, solved</text>
+
+            <!-- legend -->
+            <line x1="312" y1="203" x2="330" y2="203" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round"/>
+            <text x="336" y="206.5" fill="#C6D2E6" font-size="9.5">TRINETRA (ML)</text>
+            <line x1="312" y1="220" x2="330" y2="220" stroke="#FFB454" stroke-width="2" stroke-linecap="round"/>
+            <text x="336" y="223.5" fill="#C6D2E6" font-size="9.5">80-trigger rule baseline</text>
+            <line x1="312" y1="237" x2="330" y2="237" stroke="#33445F" stroke-width="1" stroke-dasharray="2 4"/>
+            <text x="336" y="240.5" fill="#5B6C8C" font-size="9.5">random</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ ROW B: DRILL-DOWN + MEMO ============ -->
+    <div class="rowB">
+
+      <!-- 4. BORROWER DRILL-DOWN -->
+      <div class="panel">
+        <div class="dd-head">
+          <div class="dd-name">Shree Ganesh Textiles Pvt Ltd</div>
+          <span class="chip chip-amber">SMA-0 → Watchlist</span>
+          <span class="chip chip-red">12-mo PD 22.9%</span>
+          <span class="chip chip-slate">Exposure ₹8.4 Cr</span>
+          <span class="dd-meta" style="margin-left:auto">A/c 004512 · Textiles — Cotton Yarn · Mumbai Zonal · flag lead 7 mo</span>
+        </div>
+        <div class="dd-body">
+          <div class="dd-col">
+            <div class="dd-col-title">PD term structure — next 12 months</div>
+            <div class="dd-col-sub">conditional monthly hazard · shaded 90% CI · Jul ’26 – Jun ’27</div>
+            <div class="dd-chart">
+              <svg viewBox="0 0 420 230" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                <!-- grid -->
+                <line class="grid-l" x1="34" y1="144.5" x2="404" y2="144.5"/>
+                <line class="grid-l" x1="34" y1="101"   x2="404" y2="101"/>
+                <line class="grid-l" x1="34" y1="57.5"  x2="404" y2="57.5"/>
+                <line class="grid-l" x1="34" y1="14"    x2="404" y2="14"/>
+                <line class="ax" x1="34" y1="188" x2="404" y2="188"/>
+                <line class="ax" x1="34" y1="14"  x2="34"  y2="188"/>
+                <!-- y ticks -->
+                <text class="tick" x="28" y="191" text-anchor="end">0</text>
+                <text class="tick" x="28" y="147.5" text-anchor="end">1%</text>
+                <text class="tick" x="28" y="104" text-anchor="end">2%</text>
+                <text class="tick" x="28" y="60.5" text-anchor="end">3%</text>
+                <text class="tick" x="28" y="17" text-anchor="end">4%</text>
+                <!-- x month labels -->
+                <text class="tick" x="34"    y="203" text-anchor="middle">Jul</text>
+                <text class="tick" x="67.6"  y="203" text-anchor="middle">Aug</text>
+                <text class="tick" x="101.3" y="203" text-anchor="middle">Sep</text>
+                <text class="tick" x="134.9" y="203" text-anchor="middle">Oct</text>
+                <text class="tick" x="168.5" y="203" text-anchor="middle">Nov</text>
+                <text class="tick" x="202.2" y="203" text-anchor="middle">Dec</text>
+                <text class="tick" x="235.8" y="203" text-anchor="middle">Jan</text>
+                <text class="tick" x="269.5" y="203" text-anchor="middle">Feb</text>
+                <text class="tick" x="303.1" y="203" text-anchor="middle">Mar</text>
+                <text class="tick" x="336.7" y="203" text-anchor="middle">Apr</text>
+                <text class="tick" x="370.4" y="203" text-anchor="middle">May</text>
+                <text class="tick" x="404"   y="203" text-anchor="middle">Jun</text>
+                <text class="tick" x="34" y="215" text-anchor="middle" fill="#3E4E6E">’26</text>
+                <text class="tick" x="235.8" y="215" text-anchor="middle" fill="#3E4E6E">’27</text>
+
+                <!-- confidence band -->
+                <path d="M34,127.1 L67.6,111.9 L101.3,94.5 L134.9,74.9 L168.5,53.2 L202.2,35.8 L235.8,20.5 L269.5,35.8 L303.1,51 L336.7,66.2 L370.4,77.1 L404,83.6
+                         L404,170.6 L370.4,159.7 L336.7,144.5 L303.1,124.9 L269.5,105.4 L235.8,85.8 L202.2,96.7 L168.5,105.4 L134.9,118.4 L101.3,133.6 L67.6,142.3 L34,153.2 Z"
+                      fill="rgba(45,212,191,.11)" stroke="rgba(45,212,191,.22)" stroke-width="1"/>
+
+                <!-- peak marker line -->
+                <line x1="235.8" y1="18" x2="235.8" y2="188" stroke="#FFB454" stroke-width="1" stroke-dasharray="3 4" opacity=".7"/>
+
+                <!-- hazard curve -->
+                <path d="M34,140.2 L67.6,127.1 L101.3,114.1 L134.9,96.7 L168.5,79.3 L202.2,66.2 L235.8,53.2 L269.5,70.6 L303.1,87.9 L336.7,105.4 L370.4,118.4 L404,127.1"
+                      fill="none" stroke="#2DD4BF" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle cx="235.8" cy="53.2" r="4.5" fill="#FFB454" stroke="#0D1728" stroke-width="1.5"/>
+                <text x="235.8" y="9" text-anchor="middle" fill="#FFB454" font-size="9.5" font-weight="700">Peak stress · Jan ’27 · 3.1%</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="dd-col">
+            <div class="dd-col-title">Why flagged — SHAP → RBI EWS reason codes</div>
+            <div class="dd-col-sub">contribution to 12-mo PD, percentage points</div>
+            <div class="shap">
+              <div class="shap-row">
+                <div class="shap-lab"><span>Base segment PD (Textiles MSME)</span><span class="v tot">3.4%</span></div>
+                <div class="shap-track"><span class="shap-bar sb-base" style="left:0%;width:13.6%"></span></div>
+              </div>
+              <div class="shap-row">
+                <div class="shap-lab"><span>GST turnover decline −18% QoQ</span><span class="v pos">+9.2pp</span></div>
+                <div class="shap-track"><span class="shap-bar sb-pos" style="left:13.6%;width:36.8%"></span></div>
+              </div>
+              <div class="shap-row">
+                <div class="shap-lab"><span>Working-capital utilization 94% for 62 days</span><span class="v pos">+6.1pp</span></div>
+                <div class="shap-track"><span class="shap-bar sb-pos" style="left:50.4%;width:24.4%"></span></div>
+              </div>
+              <div class="shap-row">
+                <div class="shap-lab"><span>Bureau enquiry spike: 4 in 90d</span><span class="v pos">+3.3pp</span></div>
+                <div class="shap-track"><span class="shap-bar sb-pos" style="left:74.8%;width:13.2%"></span></div>
+              </div>
+              <div class="shap-row">
+                <div class="shap-lab"><span>Promoter cheque bounce ×2</span><span class="v pos">+2.8pp</span></div>
+                <div class="shap-track"><span class="shap-bar sb-pos" style="left:88%;width:11.2%"></span></div>
+              </div>
+              <div class="shap-row">
+                <div class="shap-lab"><span>Prompt GST filing streak (12 mo)</span><span class="v neg">−1.9pp</span></div>
+                <div class="shap-track"><span class="shap-bar sb-neg" style="left:91.6%;width:7.6%"></span></div>
+              </div>
+              <div class="shap-row">
+                <div class="shap-lab"><span><b>Calibrated 12-mo PD</b></span><span class="v tot">22.9%</span></div>
+                <div class="shap-track"><span class="shap-bar sb-tot" style="left:0%;width:91.6%"></span></div>
+              </div>
+              <div class="shap-note">Reason codes mapped to RBI EWS trigger taxonomy (T08 · T12 · T31 · T44) · identical across all segment models</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. GENAI CREDIT MEMO -->
+      <div class="panel">
+        <div class="p-head" style="align-items:center;">
+          <div class="p-title">GenAI credit memo — draft</div>
+          <span class="memo-badge" style="margin-left:auto"><span class="dot"></span>Drafted by TRINETRA Copilot · officer approval required</span>
+        </div>
+        <div class="memo-body">
+          <div class="memo-sec">
+            <b class="k">Subject</b>
+            Early-Warning Review — Shree Ganesh Textiles Pvt Ltd (A/c 004512) · Textiles, Cotton Yarn
+          </div>
+          <div class="memo-sec">
+            <b class="k">Exposure summary</b>
+            CC ₹6.2 Cr (util. 94%) + TL o/s ₹2.2 Cr = <b>₹8.4 Cr</b> total. Security coverage 1.31×. Conduct satisfactory till Mar ’26; last renewal Nov ’25.
+          </div>
+          <div class="memo-sec">
+            <b class="k">Triggers fired (4)</b>
+            EWS-T12 GST turnover −18% QoQ · EWS-T31 WC utilization ≥90% for 62 days · EWS-T44 bureau enquiries 4 in 90d · EWS-T08 promoter cheque returns ×2.
+          </div>
+          <div class="memo-sec">
+            <b class="k">External signal</b>
+            <span class="news">“Cotton yarn export order cancellations” — Textile Weekly, 12 Jun 2026.</span> Entity-matched (conf. 0.92); corroborates GST-turnover decline.
+          </div>
+          <div class="memo-sec">
+            <b class="k">Recommended action</b>
+            <span class="act">Move to SMA watchlist; initiate RFA review.</span> Unit visit within 15 days; obtain stock statement &amp; top-5 debtor ageing.
+          </div>
+        </div>
+        <div class="memo-status" id="memoStatus">Awaiting officer decision · memo cites 6 source fields · zero unverified figures</div>
+        <div class="memo-actions">
+          <button class="btn btn-primary" id="approveBtn">Approve (human-in-loop)</button>
+          <button class="btn btn-outline">Edit</button>
+          <button class="btn btn-ghost">Audit trail</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 6. ALERT QUEUE ============ -->
+    <div class="panel">
+      <div class="p-head">
+        <div class="p-title">Alert queue</div>
+        <div class="p-sub">pending officer action · sorted by 12-mo PD</div>
+        <div class="p-right">6 of 24 new alerts · auto-refreshed 04:12 IST</div>
+      </div>
+      <table class="alerts">
+        <thead>
+          <tr>
+            <th>Borrower</th><th>Segment</th><th>Exposure</th><th>PD 12-mo</th>
+            <th>Top trigger</th><th>Days to predicted stress</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="alertRows">
+          <tr class="sel">
+            <td><div class="b-name">Shree Ganesh Textiles Pvt Ltd</div><div class="b-sub">A/c 004512 · SMA-0</div></td>
+            <td>Textiles — Cotton Yarn</td>
+            <td>₹8.4 Cr</td>
+            <td><div class="pd-cell"><span class="pd-num" style="color:var(--red)">22.9%</span><span class="pd-bar"><span class="pd-fill" style="width:92%"></span></span></div></td>
+            <td class="trig">GST turnover −18% QoQ</td>
+            <td class="days">208 <small>d · Jan ’27</small></td>
+            <td><span class="act-chip ac-teal">Review memo</span></td>
+          </tr>
+          <tr>
+            <td><div class="b-name">Apex Auto Components</div><div class="b-sub">A/c 007218 · SMA-1</div></td>
+            <td>Auto Ancillary — Tier-2</td>
+            <td>₹12.1 Cr</td>
+            <td><div class="pd-cell"><span class="pd-num" style="color:var(--red)">19.4%</span><span class="pd-bar"><span class="pd-fill" style="width:78%"></span></span></div></td>
+            <td class="trig">WC utilization 97% for 45 days</td>
+            <td class="days">152 <small>d · Nov ’26</small></td>
+            <td><span class="act-chip ac-slate">Assign RM</span></td>
+          </tr>
+          <tr>
+            <td><div class="b-name">Krishna Agro Foods</div><div class="b-sub">A/c 003884 · SMA-0</div></td>
+            <td>Agro Processing</td>
+            <td>₹5.6 Cr</td>
+            <td><div class="pd-cell"><span class="pd-num" style="color:var(--amber)">17.8%</span><span class="pd-bar"><span class="pd-fill" style="width:71%"></span></span></div></td>
+            <td class="trig">GSTR-3B filed late ×2</td>
+            <td class="days">178 <small>d · Dec ’26</small></td>
+            <td><span class="act-chip ac-slate">Site visit</span></td>
+          </tr>
+          <tr>
+            <td><div class="b-name">Meenakshi Pharma Labs</div><div class="b-sub">A/c 009152 · Watch</div></td>
+            <td>Pharma Formulations</td>
+            <td>₹9.3 Cr</td>
+            <td><div class="pd-cell"><span class="pd-num" style="color:var(--amber)">16.2%</span><span class="pd-bar"><span class="pd-fill" style="width:65%"></span></span></div></td>
+            <td class="trig">Bureau enquiries 5 in 90d</td>
+            <td class="days">236 <small>d · Feb ’27</small></td>
+            <td><span class="act-chip ac-teal">Review memo</span></td>
+          </tr>
+          <tr>
+            <td><div class="b-name">Sagar Marine Exports</div><div class="b-sub">A/c 002471 · SMA-1</div></td>
+            <td>Marine Exports</td>
+            <td>₹7.2 Cr</td>
+            <td><div class="pd-cell"><span class="pd-num" style="color:var(--amber)">15.7%</span><span class="pd-bar"><span class="pd-fill" style="width:63%"></span></span></div></td>
+            <td class="trig">Export LC devolvement ×1</td>
+            <td class="days">121 <small>d · Oct ’26</small></td>
+            <td><span class="act-chip ac-red">Escalate</span></td>
+          </tr>
+          <tr>
+            <td><div class="b-name">Rathod Steel Industries</div><div class="b-sub">A/c 006903 · Watch</div></td>
+            <td>Steel Fabrication</td>
+            <td>₹11.8 Cr</td>
+            <td><div class="pd-cell"><span class="pd-num" style="color:var(--amber)">15.1%</span><span class="pd-bar"><span class="pd-fill" style="width:60%"></span></span></div></td>
+            <td class="trig">Inward cheque return ×1</td>
+            <td class="days">264 <small>d · Mar ’27</small></td>
+            <td><span class="act-chip ac-slate">Monitor</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <div class="footer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#5B6C8C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5V11c0 5.5-3.5 9-8 11-4.5-2-8-5.5-8-11V5.5z"/></svg>
+      <span><b>Augments existing EWS</b> (RBI Master Directions Jul 2024) · <b>DPDP-compliant</b> · Demo on public-data models — retrains on bank book in sandbox</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Nav tab highlight
+  document.querySelectorAll('#nav .nav-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      document.querySelectorAll('#nav .nav-item').forEach(function(n){ n.classList.remove('active'); });
+      item.classList.add('active');
+    });
+  });
+
+  // Alert row selection
+  document.querySelectorAll('#alertRows tr').forEach(function(row){
+    row.addEventListener('click', function(){
+      document.querySelectorAll('#alertRows tr').forEach(function(r){ r.classList.remove('sel'); });
+      row.classList.add('sel');
+    });
+  });
+
+  // Human-in-loop approve
+  var approveBtn = document.getElementById('approveBtn');
+  var memoStatus = document.getElementById('memoStatus');
+  approveBtn.addEventListener('click', function(){
+    approveBtn.textContent = 'Approved ✓ · logged';
+    approveBtn.style.filter = 'saturate(.85)';
+    memoStatus.textContent = 'Approved by Credit Officer · moved to SMA watchlist · RFA queue #23 · audit trail updated 04:12 IST';
+    memoStatus.classList.add('ok');
+  });
+</script>
+</body>
+</html>
