@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from trinetra.api.service import ScoringService
@@ -10,6 +11,12 @@ from trinetra.config import settings
 from trinetra.genai.llm import GemmaClient
 
 app = FastAPI(title="TRINETRA", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 _ARTIFACT = settings.artifacts_dir / "ltfs_segment.joblib"
 _service: ScoringService | None = None
