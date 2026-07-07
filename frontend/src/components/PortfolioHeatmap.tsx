@@ -4,11 +4,11 @@ import type { ScoredBorrower } from "../types";
 
 const GRADES = ["A", "B", "C", "D", "E"] as const;
 const GRADE_COLOR: Record<string, string> = {
-  A: "45, 212, 191",
-  B: "125, 211, 168",
-  C: "255, 180, 84",
-  D: "240, 138, 93",
-  E: "242, 109, 126",
+  A: "0, 131, 108",
+  B: "63, 153, 90",
+  C: "217, 133, 43",
+  D: "200, 96, 50",
+  E: "193, 82, 78",
 };
 
 export function PortfolioHeatmap({ rows }: { rows: ScoredBorrower[] }) {

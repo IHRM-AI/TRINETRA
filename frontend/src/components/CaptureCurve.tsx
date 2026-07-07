@@ -44,22 +44,22 @@ export function CaptureCurve() {
         <div className="p-sub">out-of-time · L&amp;T segment · AUC {data.metrics.auc.toFixed(2)}</div>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H}>
-        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={PAD} stroke="#22324a" strokeDasharray="3 3" />
-        <line x1={markerX} y1={PAD} x2={markerX} y2={H - PAD} stroke="#39506e" strokeDasharray="2 3" />
-        <path d={path(data.capture_curve_rule)} fill="none" stroke="#ffb454" strokeWidth={2.5} />
-        <path d={path(data.capture_curve_model)} fill="none" stroke="#2dd4bf" strokeWidth={2.5} />
-        <circle cx={markerX} cy={H - PAD - data.capture_at_20pct.model * (H - 2 * PAD)} r={4} fill="#2dd4bf" />
-        <circle cx={markerX} cy={H - PAD - data.capture_at_20pct.rule_baseline * (H - 2 * PAD)} r={4} fill="#ffb454" />
-        <text x={PAD} y={H - 10} fontSize={10} fill="#5b6c8c">
+        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={PAD} stroke="#d5cdbd" strokeDasharray="3 3" />
+        <line x1={markerX} y1={PAD} x2={markerX} y2={H - PAD} stroke="#c9bfaf" strokeDasharray="2 3" />
+        <path d={path(data.capture_curve_rule)} fill="none" stroke="#9aa9b4" strokeWidth={2.5} />
+        <path d={path(data.capture_curve_model)} fill="none" stroke="#00836c" strokeWidth={3} />
+        <circle cx={markerX} cy={H - PAD - data.capture_at_20pct.model * (H - 2 * PAD)} r={4} fill="#00836c" />
+        <circle cx={markerX} cy={H - PAD - data.capture_at_20pct.rule_baseline * (H - 2 * PAD)} r={4} fill="#9aa9b4" />
+        <text x={PAD} y={H - 10} fontSize={10} fill="#64748b">
           % of book flagged
         </text>
       </svg>
       <div className="capture-legend">
         <span>
-          <i style={{ background: "#2dd4bf" }} /> TRINETRA {modelAt20}%
+          <i style={{ background: "#00836c" }} /> TRINETRA {modelAt20}%
         </span>
         <span>
-          <i style={{ background: "#ffb454" }} /> Rule EWS {ruleAt20}%
+          <i style={{ background: "#9aa9b4" }} /> Rule EWS {ruleAt20}%
         </span>
         <span className="capture-gain">+{gain}pp caught at a 20% flag budget</span>
       </div>

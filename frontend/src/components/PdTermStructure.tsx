@@ -40,13 +40,13 @@ export function PdTermStructure({ features }: { features: Features }) {
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H}>
         <path
           d={`${line} L ${points[points.length - 1].x} ${H - PAD} L ${points[0].x} ${H - PAD} Z`}
-          fill="rgba(45,212,191,0.12)"
+          fill="rgba(0,131,108,0.10)"
         />
-        <path d={line} fill="none" stroke="#2dd4bf" strokeWidth={2.5} />
+        <path d={line} fill="none" stroke="#00836c" strokeWidth={2.5} />
         {peak && (
           <>
-            <line x1={peak.x} y1={peak.y} x2={peak.x} y2={H - PAD} stroke="#ffb454" strokeWidth={1} strokeDasharray="3 3" />
-            <circle cx={peak.x} cy={peak.y} r={4} fill="#ffb454" />
+            <line x1={peak.x} y1={peak.y} x2={peak.x} y2={H - PAD} stroke="#d9852b" strokeWidth={1} strokeDasharray="3 3" />
+            <circle cx={peak.x} cy={peak.y} r={4} fill="#d9852b" />
           </>
         )}
         {MONTHS.map((label, index) => (
