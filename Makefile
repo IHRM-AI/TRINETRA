@@ -1,10 +1,13 @@
-.PHONY: install data train test lint
+.PHONY: install data zoo train test serve lint
 
 install:
 	pip install -e ".[dev]"
 
 data:
 	bash scripts/download_data.sh
+
+zoo:
+	python -m trinetra.pipelines.zoo_benchmark
 
 train:
 	python -m trinetra.pipelines.train_ltfs

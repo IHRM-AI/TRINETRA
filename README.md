@@ -45,8 +45,16 @@ make train                    # trains the L&T vehicle-finance segment
 make test
 ```
 
-## Current baseline
-L&T vehicle-finance segment, out-of-time validation (~47k accounts): **AUC 0.65, Gini 0.30, KS 0.22**, calibrated. This is the CIBIL-style Indian segment; additional public segments (Home Credit, Amex, SBA, Freddie Mac) plug into the same interface. Every model retrains on the bank's own book in the sandbox.
+## Model zoo — measured benchmark
+Each segment plugs into one interface (`src/trinetra/segments.py`) and trains the same calibrated model. Run `make zoo` (writes `artifacts/zoo_benchmark.json`):
+
+| Segment | Dataset | AUC | Gini | KS |
+|---|---|---|---|---|
+| India vehicle finance | L&T / LTFS | 0.66 | 0.32 | 0.23 |
+| Retail unsecured | Home Credit | 0.75 | 0.50 | 0.38 |
+| US mortgage | Freddie Mac (CRT loan-level) | 0.79 | 0.57 | 0.42 |
+
+Reason codes use one shared RBI-EWS interpretation layer across every segment. Every model retrains on the bank's own book in the sandbox.
 
 ## Datasets
 Public datasets only; licences restrict redistribution, so the repository ships download scripts, not data (see `scripts/download_data.sh` and `.gitignore`).

@@ -21,3 +21,6 @@ kaggle datasets download -d raddar/amex-data-integer-dtypes-parquet-format \
   -p "$RAW_DIR/amex" --unzip
 
 echo "Datasets downloaded to $RAW_DIR"
+
+# US mortgage: Freddie Mac Single-Family / CRT loan-level sample (manual download,
+# free account at freddiemac.com/research) -> place the zip in data/raw/freddie/.
