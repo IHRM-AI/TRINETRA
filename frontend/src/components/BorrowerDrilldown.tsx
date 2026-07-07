@@ -1,5 +1,6 @@
 import type { ScoredBorrower } from "../types";
 import { formatPd } from "../format";
+import { PdTermStructure } from "./PdTermStructure";
 import { ReasonCodes } from "./ReasonCodes";
 
 interface BorrowerDrilldownProps {
@@ -41,10 +42,13 @@ export function BorrowerDrilldown({ selected }: BorrowerDrilldownProps) {
         </span>
       </div>
       <div className="dd-body">
-        <div className="dd-col-title">Why flagged — SHAP → RBI EWS reason codes</div>
-        <div className="dd-col-sub">contribution to 12-mo PD, percentage points</div>
         {score ? (
-          <ReasonCodes codes={score.reason_codes} />
+          <>
+            <PdTermStructure features={borrower.features} />
+            <div className="dd-col-title">Why flagged — SHAP → RBI EWS reason codes</div>
+            <div className="dd-col-sub">contribution to 12-mo PD, percentage points</div>
+            <ReasonCodes codes={score.reason_codes} />
+          </>
         ) : (
           <div className="state error">
             {error ?? "This borrower could not be scored."}

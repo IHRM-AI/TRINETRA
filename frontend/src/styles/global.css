@@ -785,3 +785,9 @@ table.portfolio {
     grid-template-columns: 1fr;
   }
 }
+
+.term {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft, #182640);
+}

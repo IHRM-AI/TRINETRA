@@ -31,3 +31,10 @@ export interface MemoResponse {
   generated_by: string;
   sources: string[];
 }
+
+export interface TermStructureResponse {
+  months: number[];
+  marginal_pd: number[];
+  cumulative_pd: number[];
+  peak_month: number;
+}

@@ -3,6 +3,7 @@ import type {
   HealthResponse,
   MemoResponse,
   ScoreResponse,
+  TermStructureResponse,
 } from "./types";
 
 const BASE = (import.meta.env.VITE_API_BASE ?? "http://localhost:8080").replace(
@@ -78,5 +79,12 @@ export function draftMemo(
   return request<MemoResponse>("/memo", {
     method: "POST",
     body: JSON.stringify({ borrower, exposure, features }),
+  });
+}
+
+export function termStructure(features: Features): Promise<TermStructureResponse> {
+  return request<TermStructureResponse>("/term-structure", {
+    method: "POST",
+    body: JSON.stringify({ features }),
   });
 }
