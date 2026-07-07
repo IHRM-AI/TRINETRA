@@ -836,3 +836,60 @@ table.portfolio {
   cursor: pointer;
 }
 .add-submit:disabled { opacity: 0.6; }
+
+.p-sub { font-size: 12px; color: #5b6c8c; }
+.heatmap .hm-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(5, 1fr);
+  gap: 5px;
+  margin-top: 10px;
+}
+.hm-corner { }
+.hm-col {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8fa1be;
+  padding-bottom: 2px;
+}
+.hm-row-label {
+  font-size: 12.5px;
+  color: #c7d3e6;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hm-cell {
+  height: 34px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b1626;
+}
+.capture svg { margin-top: 6px; }
+.capture-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12.5px;
+  color: #8fa1be;
+  margin-top: 4px;
+}
+.capture-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.capture-gain {
+  margin-left: auto;
+  color: #2dd4bf;
+  font-weight: 600;
+}

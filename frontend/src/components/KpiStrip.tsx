@@ -1,14 +1,13 @@
 import type { CSSProperties } from "react";
-import type { HealthResponse } from "../api/types";
+import type { HealthResponse, PortfolioSummary } from "../api/types";
 import type { ScoredBorrower } from "../types";
 
 interface KpiStripProps {
   rows: ScoredBorrower[];
+  summary: PortfolioSummary | null;
   health: HealthResponse | null;
   healthError: boolean;
 }
-
-const HIGH_RISK_PD = 0.15;
 
 function modelStatus(health: HealthResponse | null, healthError: boolean) {
   if (healthError || health === null) return "Backend offline";
@@ -16,44 +15,33 @@ function modelStatus(health: HealthResponse | null, healthError: boolean) {
   return health.genai_available ? "Loaded · GenAI on" : "Loaded · GenAI off";
 }
 
-export function KpiStrip({ rows, health, healthError }: KpiStripProps) {
-  const scored = rows.filter((row) => row.score !== null);
-  const highRisk = scored.filter(
-    (row) => row.score !== null && row.score.pd >= HIGH_RISK_PD,
-  );
-  const highRiskExposure = highRisk.reduce(
-    (sum, row) => sum + row.borrower.exposureCr,
-    0,
-  );
-  const totalExposure = rows.reduce(
-    (sum, row) => sum + row.borrower.exposureCr,
-    0,
-  );
+export function KpiStrip({ rows, summary, health, healthError }: KpiStripProps) {
+  const total = summary?.total_exposure_cr ?? rows.reduce((s, r) => s + r.borrower.exposureCr, 0);
+  const highRisk = summary?.high_risk ?? 0;
+  const atRisk = summary?.exposure_at_risk_cr ?? 0;
+  const monitored = summary?.n ?? rows.length;
 
   return (
     <div className="kpis">
       <div className="kpi" style={{ "--kc": "var(--idbi-bright)" } as CSSProperties}>
         <div className="kpi-label">Accounts monitored</div>
-        <div className="kpi-value">{rows.length}</div>
-        <div className="kpi-sub">
-          seeded MSME book · ₹{totalExposure.toFixed(1)} Cr exposure
-        </div>
+        <div className="kpi-value">{monitored.toLocaleString("en-IN")}</div>
+        <div className="kpi-sub">live MSME book · ₹{total.toFixed(1)} Cr exposure</div>
       </div>
       <div className="kpi" style={{ "--kc": "var(--red)" } as CSSProperties}>
-        <div className="kpi-label">High-risk (PD &ge; 15%)</div>
-        <div className="kpi-value">{highRisk.length}</div>
+        <div className="kpi-label">High-risk (grade D+)</div>
+        <div className="kpi-value">{highRisk}</div>
         <div className="kpi-sub">
-          <span className="warn">₹{highRiskExposure.toFixed(1)} Cr</span> exposure
-          at risk
+          <span className="warn">₹{atRisk.toFixed(1)} Cr</span> exposure at risk
         </div>
       </div>
       <div className="kpi" style={{ "--kc": "var(--amber)" } as CSSProperties}>
-        <div className="kpi-label">Scored this batch</div>
+        <div className="kpi-label">Risk-ranked book</div>
         <div className="kpi-value">
-          {scored.length}
-          <small>/ {rows.length}</small>
+          {rows.length}
+          <small>/ {monitored}</small>
         </div>
-        <div className="kpi-sub">POST /score · SHAP reason codes attached</div>
+        <div className="kpi-sub">scored via /portfolio · SHAP on drill-down</div>
       </div>
       <div className="kpi" style={{ "--kc": "var(--teal)" } as CSSProperties}>
         <div className="kpi-label">Model status</div>

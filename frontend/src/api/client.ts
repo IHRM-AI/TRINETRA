@@ -1,12 +1,14 @@
 import type {
+  BenchmarkResponse,
   Features,
   HealthResponse,
   MemoResponse,
+  PortfolioResponse,
   ScoreResponse,
   TermStructureResponse,
 } from "./types";
 
-const BASE = (import.meta.env.VITE_API_BASE ?? "http://localhost:8080").replace(
+const BASE = (import.meta.env.VITE_API_BASE ?? "http://localhost:8091").replace(
   /\/$/,
   "",
 );
@@ -87,4 +89,12 @@ export function termStructure(features: Features): Promise<TermStructureResponse
     method: "POST",
     body: JSON.stringify({ features }),
   });
+}
+
+export function getPortfolio(n = 240): Promise<PortfolioResponse> {
+  return request<PortfolioResponse>(`/portfolio?n=${n}`);
+}
+
+export function getBenchmark(): Promise<BenchmarkResponse> {
+  return request<BenchmarkResponse>("/benchmark");
 }

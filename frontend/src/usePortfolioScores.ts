@@ -1,24 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
-import { ApiError, getHealth, score } from "./api/client";
-import type { HealthResponse } from "./api/types";
+import { ApiError, getHealth, getPortfolio, score } from "./api/client";
+import type { Account, HealthResponse, PortfolioSummary } from "./api/types";
 import type { Borrower } from "./data/portfolio";
-import { PORTFOLIO } from "./data/portfolio";
 import type { ScoredBorrower } from "./types";
 
 type LoadPhase = "loading" | "ready" | "error";
 
 interface PortfolioScores {
   rows: ScoredBorrower[];
+  summary: PortfolioSummary | null;
   health: HealthResponse | null;
   healthError: boolean;
   phase: LoadPhase;
   backendDown: boolean;
   reload: () => void;
   addBorrower: (borrower: Borrower) => Promise<ScoredBorrower>;
-}
-
-function byPd(a: ScoredBorrower, b: ScoredBorrower): number {
-  return (b.score?.pd ?? -1) - (a.score?.pd ?? -1);
 }
 
 function describe(cause: unknown): string {
@@ -28,18 +24,31 @@ function describe(cause: unknown): string {
   return cause instanceof Error ? cause.message : "scoring failed";
 }
 
-async function scoreBorrower(borrower: Borrower): Promise<ScoredBorrower> {
-  try {
-    return { borrower, score: await score(borrower.features), error: null };
-  } catch (cause) {
-    return { borrower, score: null, error: describe(cause) };
-  }
+function toRow(account: Account): ScoredBorrower {
+  return {
+    borrower: {
+      id: account.id,
+      name: account.name,
+      account: account.account,
+      sector: account.sector,
+      region: account.region,
+      exposure: `₹${account.exposure_cr} Cr`,
+      exposureCr: account.exposure_cr,
+      features: account.features,
+    },
+    score: {
+      pd: account.pd,
+      grade: account.grade,
+      watch_tier: account.watch_tier,
+      reason_codes: [],
+    },
+    error: null,
+  };
 }
 
 export function usePortfolioScores(): PortfolioScores {
-  const [rows, setRows] = useState<ScoredBorrower[]>(
-    PORTFOLIO.map((borrower) => ({ borrower, score: null, error: null })),
-  );
+  const [rows, setRows] = useState<ScoredBorrower[]>([]);
+  const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState(false);
   const [phase, setPhase] = useState<LoadPhase>("loading");
@@ -48,8 +57,13 @@ export function usePortfolioScores(): PortfolioScores {
   const reload = useCallback(() => setNonce((n) => n + 1), []);
 
   const addBorrower = useCallback(async (borrower: Borrower) => {
-    const scored = await scoreBorrower(borrower);
-    setRows((prev) => [...prev, scored].sort(byPd));
+    let scored: ScoredBorrower;
+    try {
+      scored = { borrower, score: await score(borrower.features), error: null };
+    } catch (cause) {
+      scored = { borrower, score: null, error: describe(cause) };
+    }
+    setRows((prev) => [...prev, scored].sort((a, b) => (b.score?.pd ?? -1) - (a.score?.pd ?? -1)));
     return scored;
   }, []);
 
@@ -67,14 +81,15 @@ export function usePortfolioScores(): PortfolioScores {
         setHealthError(!healthResult.ok);
       }
 
-      const scored = await Promise.all(PORTFOLIO.map(scoreBorrower));
-      if (cancelled) return;
-
-      scored.sort(byPd);
-      setRows(scored);
-
-      const anyScored = scored.some((row) => row.score !== null);
-      setPhase(anyScored || healthResult.ok ? "ready" : "error");
+      try {
+        const portfolio = await getPortfolio(240);
+        if (cancelled) return;
+        setRows(portfolio.accounts.map(toRow));
+        setSummary(portfolio.summary);
+        setPhase("ready");
+      } catch {
+        if (!cancelled) setPhase("error");
+      }
     }
 
     void run();
@@ -83,7 +98,7 @@ export function usePortfolioScores(): PortfolioScores {
     };
   }, [nonce]);
 
-  const backendDown = healthError && rows.every((row) => row.score === null);
+  const backendDown = healthError && rows.length === 0;
 
-  return { rows, health, healthError, phase, backendDown, reload, addBorrower };
+  return { rows, summary, health, healthError, phase, backendDown, reload, addBorrower };
 }

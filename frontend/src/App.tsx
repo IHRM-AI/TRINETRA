@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { KpiStrip } from "./components/KpiStrip";
 import { PortfolioTable } from "./components/PortfolioTable";
+import { PortfolioHeatmap } from "./components/PortfolioHeatmap";
+import { CaptureCurve } from "./components/CaptureCurve";
 import { BorrowerDrilldown } from "./components/BorrowerDrilldown";
 import { CreditMemo } from "./components/CreditMemo";
 import { NewBorrowerForm } from "./components/NewBorrowerForm";
 import { usePortfolioScores } from "./usePortfolioScores";
 
 export function App() {
-  const { rows, health, healthError, phase, backendDown, reload, addBorrower } =
+  const { rows, summary, health, healthError, phase, backendDown, reload, addBorrower } =
     usePortfolioScores();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -37,7 +39,7 @@ export function App() {
           </div>
         )}
 
-        <KpiStrip rows={rows} health={health} healthError={healthError} />
+        <KpiStrip rows={rows} summary={summary} health={health} healthError={healthError} />
 
         {phase === "loading" ? (
           <div className="panel">
@@ -48,6 +50,10 @@ export function App() {
           </div>
         ) : (
           <>
+            <div className="grid-2">
+              <PortfolioHeatmap rows={rows} />
+              <CaptureCurve />
+            </div>
             <NewBorrowerForm addBorrower={addBorrower} onAdded={setSelectedId} />
             <PortfolioTable
               rows={rows}

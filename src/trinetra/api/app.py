@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
+import json
 
+import joblib
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from trinetra.api.portfolio import PortfolioService
 from trinetra.api.service import ScoringService
 from trinetra.config import settings
 from trinetra.genai.llm import GemmaClient
@@ -20,6 +22,7 @@ app.add_middleware(
 
 _ARTIFACT = settings.artifacts_dir / "ltfs_segment.joblib"
 _service: ScoringService | None = None
+_portfolio: PortfolioService | None = None
 
 
 class ScoreRequest(BaseModel):
@@ -43,6 +46,15 @@ def _require_service() -> ScoringService:
     if _service is None:
         raise HTTPException(status_code=503, detail="Model artifact not loaded. Train a segment first.")
     return _service
+
+
+def _require_portfolio() -> PortfolioService:
+    global _portfolio
+    if _portfolio is None:
+        if not _ARTIFACT.exists():
+            raise HTTPException(status_code=503, detail="Model artifact not loaded. Train a segment first.")
+        _portfolio = PortfolioService(joblib.load(_ARTIFACT))
+    return _portfolio
 
 
 @app.get("/health")
@@ -74,3 +86,16 @@ def term_structure(request: ScoreRequest) -> dict[str, object]:
 def memo(request: MemoRequest) -> dict[str, object]:
     draft = _require_service().memo(request.borrower, request.exposure, request.features)
     return draft.__dict__
+
+
+@app.get("/portfolio")
+def portfolio(n: int = 200, seed: int = 7) -> dict[str, object]:
+    return _require_portfolio().sample(n=n, seed=seed)
+
+
+@app.get("/benchmark")
+def benchmark() -> dict[str, object]:
+    path = settings.artifacts_dir / "benchmark.json"
+    if not path.exists():
+        raise HTTPException(status_code=503, detail="Benchmark not computed. Run the benchmark pipeline.")
+    return json.loads(path.read_text())
