@@ -4,10 +4,11 @@ import { KpiStrip } from "./components/KpiStrip";
 import { PortfolioTable } from "./components/PortfolioTable";
 import { BorrowerDrilldown } from "./components/BorrowerDrilldown";
 import { CreditMemo } from "./components/CreditMemo";
+import { NewBorrowerForm } from "./components/NewBorrowerForm";
 import { usePortfolioScores } from "./usePortfolioScores";
 
 export function App() {
-  const { rows, health, healthError, phase, backendDown, reload } =
+  const { rows, health, healthError, phase, backendDown, reload, addBorrower } =
     usePortfolioScores();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -47,6 +48,7 @@ export function App() {
           </div>
         ) : (
           <>
+            <NewBorrowerForm addBorrower={addBorrower} onAdded={setSelectedId} />
             <PortfolioTable
               rows={rows}
               selectedId={selectedId}

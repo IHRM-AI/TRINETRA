@@ -791,3 +791,48 @@ table.portfolio {
   padding-bottom: 14px;
   border-bottom: 1px solid var(--line-soft, #182640);
 }
+
+.add-toggle {
+  align-self: flex-start;
+  background: rgba(45, 212, 191, 0.12);
+  color: #7fe9db;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.add-form .add-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 16px;
+  padding: 4px 0 16px;
+}
+.add-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted, #8fa1be);
+}
+.add-form input {
+  background: #0b1626;
+  border: 1px solid #1d2c47;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #e7eef9;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.add-submit {
+  background: #0e9c86;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.add-submit:disabled { opacity: 0.6; }
