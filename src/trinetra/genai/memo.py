@@ -4,13 +4,15 @@ from dataclasses import dataclass, field
 
 from trinetra.genai.llm import GemmaClient
 from trinetra.genai.news import NewsItem
+from trinetra.genai.text import plain_text
 from trinetra.interpret.reason_codes import Explanation
 
 SYSTEM_PROMPT = (
     "You are a credit risk analyst at an Indian bank. Draft a concise, factual "
     "early-warning memo for a credit officer. Use only the supplied figures. Do "
     "not invent numbers. End with a recommended action. The officer approves or "
-    "edits before any account action is taken."
+    "edits before any account action is taken. Write in plain prose with simple "
+    "headings and hyphen bullets; do not use Markdown symbols such as asterisks or hashes."
 )
 
 
@@ -39,8 +41,10 @@ class CreditMemoService:
         generated_by = "deterministic template (LLM offline)"
         if self._llm.available:
             try:
-                body = self._llm.complete(
-                    SYSTEM_PROMPT, self._prompt(borrower, exposure, explanation, news)
+                body = plain_text(
+                    self._llm.complete(
+                        SYSTEM_PROMPT, self._prompt(borrower, exposure, explanation, news)
+                    )
                 )
                 generated_by = f"Gemma-4 ({self._llm.model})"
             except Exception:
