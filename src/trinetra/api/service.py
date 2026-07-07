@@ -9,6 +9,8 @@ from trinetra.features.ltfs import CATEGORICAL
 from trinetra.genai.memo import CreditMemo, CreditMemoService
 from trinetra.interpret.reason_codes import Explanation, SegmentExplainer
 from trinetra.models.gbm import SegmentModel
+from trinetra.survival.term_structure import TermStructure
+from trinetra.survival.term_structure import build as build_term_structure
 
 
 class ScoringService:
@@ -34,6 +36,9 @@ class ScoringService:
 
     def score(self, features: dict[str, object]) -> Explanation:
         return self._explainer.explain(self._frame(features), top_k=5)[0]
+
+    def term_structure(self, features: dict[str, object]) -> TermStructure:
+        return build_term_structure(self.score(features).pd_value, features)
 
     def memo(self, borrower: str, exposure: str, features: dict[str, object]) -> CreditMemo:
         return self._memo.draft(borrower, exposure, self.score(features))

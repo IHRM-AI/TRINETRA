@@ -65,6 +65,11 @@ def score(request: ScoreRequest) -> dict[str, object]:
     }
 
 
+@app.post("/term-structure")
+def term_structure(request: ScoreRequest) -> dict[str, object]:
+    return _require_service().term_structure(request.features).__dict__
+
+
 @app.post("/memo")
 def memo(request: MemoRequest) -> dict[str, object]:
     draft = _require_service().memo(request.borrower, request.exposure, request.features)
