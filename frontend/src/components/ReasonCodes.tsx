@@ -1,5 +1,5 @@
 import type { ReasonCode } from "../api/types";
-import { formatPp } from "../format";
+import { formatLogOdds } from "../format";
 
 interface ReasonCodesProps {
   codes: ReasonCode[];
@@ -15,7 +15,7 @@ export function ReasonCodes({ codes }: ReasonCodesProps) {
   }
 
   const maxMagnitude = Math.max(
-    ...codes.map((code) => Math.abs(code.contribution_pp)),
+    ...codes.map((code) => Math.abs(code.contribution_logodds)),
     1,
   );
 
@@ -23,8 +23,8 @@ export function ReasonCodes({ codes }: ReasonCodesProps) {
     <>
       <div className="shap">
         {codes.map((code, index) => {
-          const positive = code.contribution_pp > 0;
-          const width = (Math.abs(code.contribution_pp) / maxMagnitude) * 50;
+          const positive = code.contribution_logodds > 0;
+          const width = (Math.abs(code.contribution_logodds) / maxMagnitude) * 50;
           return (
             <div className="shap-row" key={`${code.code}-${index}`}>
               <div className="shap-lab">
@@ -33,7 +33,7 @@ export function ReasonCodes({ codes }: ReasonCodesProps) {
                   <span className="code">{code.code}</span>
                 </span>
                 <span className={`v ${positive ? "pos" : "neg"}`}>
-                  {formatPp(code.contribution_pp)}
+                  {formatLogOdds(code.contribution_logodds)}
                 </span>
               </div>
               <div className="shap-track">
@@ -51,8 +51,9 @@ export function ReasonCodes({ codes }: ReasonCodesProps) {
         <span>increases risk</span>
       </div>
       <div className="shap-note">
-        Contributions in percentage points from the segment SHAP explainer,
-        mapped to the RBI EWS trigger taxonomy.
+        Contributions are SHAP log-odds margins from the segment model, mapped
+        to the RBI EWS trigger taxonomy. Sign gives direction; magnitude ranks
+        drivers. Values are on the log-odds scale, not percentage points of PD.
       </div>
     </>
   );

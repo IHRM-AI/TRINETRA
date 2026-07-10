@@ -60,7 +60,8 @@ class CreditMemoService:
     @staticmethod
     def _reasons(explanation: Explanation) -> str:
         return "\n".join(
-            f"- {code.label} ({code.code}): {code.contribution_pp:+.1f}pp, {code.direction}"
+            f"- {code.label} ({code.code}): {code.direction} "
+            f"(SHAP log-odds margin {code.contribution_logodds:+.3f})"
             for code in explanation.reason_codes
         )
 

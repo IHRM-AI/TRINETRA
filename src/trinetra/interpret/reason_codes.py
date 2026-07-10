@@ -14,7 +14,7 @@ from trinetra.models.gbm import SegmentModel
 class ReasonCode:
     code: str
     label: str
-    contribution_pp: float
+    contribution_logodds: float
     direction: str
 
 
@@ -34,14 +34,27 @@ class SegmentExplainer:
         self._explainer = shap.TreeExplainer(model.booster)
 
     def explain(self, x: pd.DataFrame, top_k: int = 5) -> list[Explanation]:
-        shap_values = self._explainer.shap_values(x)
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]
+        shap_values = self._positive_class_shap(self._explainer.shap_values(x))
         pd_values = self._model.predict_pd(x)
         return [
             self._one(x.iloc[i], shap_values[i], float(pd_values[i]), top_k)
             for i in range(len(x))
         ]
+
+    @staticmethod
+    def _positive_class_shap(shap_values: object) -> np.ndarray:
+        """Return the (n_samples, n_features) positive-class margin matrix.
+
+        Older SHAP returns a list [class0, class1] for a binary LightGBM
+        booster; newer SHAP returns a single array shaped either
+        (n_samples, n_features) or (n_samples, n_features, n_classes).
+        """
+        if isinstance(shap_values, list):
+            return np.asarray(shap_values[-1])
+        values = np.asarray(shap_values)
+        if values.ndim == 3:
+            return values[:, :, -1]
+        return values
 
     def _one(
         self, row: pd.Series, contributions: np.ndarray, pd_value: float, top_k: int
@@ -59,7 +72,7 @@ class SegmentExplainer:
                 ReasonCode(
                     code=trigger.code,
                     label=trigger.label,
-                    contribution_pp=round(float(value) * 100, 2),
+                    contribution_logodds=round(float(value), 4),
                     direction="increases risk" if value > 0 else "reduces risk",
                 )
             )

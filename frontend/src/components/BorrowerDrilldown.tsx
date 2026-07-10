@@ -64,7 +64,7 @@ export function BorrowerDrilldown({ selected }: BorrowerDrilldownProps) {
           <>
             <PdTermStructure features={borrower.features} />
             <div className="dd-col-title">Why flagged — SHAP → RBI EWS reason codes</div>
-            <div className="dd-col-sub">contribution to 12-mo PD, percentage points</div>
+            <div className="dd-col-sub">SHAP log-odds margin contribution to the score</div>
             {reasons === null ? (
               <div className="state">Explaining…</div>
             ) : (

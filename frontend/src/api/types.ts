@@ -13,7 +13,7 @@ export interface HealthResponse {
 export interface ReasonCode {
   code: string;
   label: string;
-  contribution_pp: number;
+  contribution_logodds: number;
   direction: string;
 }
 
