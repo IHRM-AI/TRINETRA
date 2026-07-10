@@ -35,6 +35,9 @@ The Firecrawl, OCR and vLLM layers are HTTP clients gated on `.env` endpoints. W
 
 See [`docs/model_card.md`](docs/model_card.md) for the bank-style model card — intended use, datasets and splits, metrics, calibration, limitations, and monitoring stance.
 
+## Integration
+A bank plugs its own CBS / bureau / GST / Account Aggregator feed in through a **feed adapter** — a small mapping class onto one stable feature schema. The model, calibration, reason codes and serving layer are untouched; onboarding a source is a config change, not a rebuild. See [`docs/integration.md`](docs/integration.md) for the day-1 integration path and [`src/trinetra/adapters/`](src/trinetra/adapters) for the `FeedAdapter` interface and a reference L&T adapter.
+
 ## Roadmap (not yet implemented)
 The following are on the roadmap and are **not** in the current codebase:
 - Fitted discrete-time survival / hazard model for the PD term structure (today's allocator is heuristic; `lifelines` is a dependency reserved for this).
@@ -52,6 +55,7 @@ src/trinetra/
   models/gbm.py        LightGBM segment model with isotonic calibration
   survival/            heuristic PD term-structure allocator
   interpret/           SHAP-to-trigger taxonomy and PD-band watch tiers
+  adapters/            bank feed adapters onto the model feature schema
   eval/metrics.py      AUC, Gini, KS, Brier
   api/                 FastAPI serving layer
   pipelines/           training entrypoints
