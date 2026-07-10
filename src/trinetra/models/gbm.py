@@ -17,6 +17,10 @@ DEFAULT_PARAMS: dict[str, object] = {
     "bagging_freq": 1,
     "min_child_samples": 200,
     "verbosity": -1,
+    "seed": 42,
+    "bagging_seed": 42,
+    "feature_fraction_seed": 42,
+    "deterministic": True,
 }
 
 
@@ -38,6 +42,12 @@ class SegmentModel:
         x_valid: pd.DataFrame,
         y_valid: np.ndarray,
     ) -> "SegmentModel":
+        """Train the booster with early stopping on x_valid.
+
+        The calibrator is not fitted here; call calibrate() on a held-out set
+        that was used for neither training nor early stopping so that isotonic
+        calibration does not leak into the reported metrics.
+        """
         self.feature_names = list(x_train.columns)
         train_set = lgb.Dataset(x_train, label=y_train)
         valid_set = lgb.Dataset(x_valid, label=y_valid, reference=train_set)
@@ -48,8 +58,12 @@ class SegmentModel:
             valid_sets=[valid_set],
             callbacks=[lgb.early_stopping(self.early_stopping_rounds, verbose=False)],
         )
-        raw_valid = self._raw_score(x_valid)
-        self.calibrator = IsotonicRegression(out_of_bounds="clip").fit(raw_valid, y_valid)
+        return self
+
+    def calibrate(self, x_cal: pd.DataFrame, y_cal: np.ndarray) -> "SegmentModel":
+        """Fit the isotonic calibrator on a dedicated held-out set."""
+        raw_cal = self._raw_score(x_cal)
+        self.calibrator = IsotonicRegression(out_of_bounds="clip").fit(raw_cal, y_cal)
         return self
 
     def _raw_score(self, x: pd.DataFrame) -> np.ndarray:
