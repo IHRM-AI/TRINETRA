@@ -16,7 +16,7 @@ jobs:
           python-version: "3.13"
       - run: pip install -e ".[dev]"
       - run: ruff check src tests
-      - run: pytest -q
+      - run: pytest -q --cov=trinetra --cov-report=term-missing
 
   frontend:
     runs-on: ubuntu-latest

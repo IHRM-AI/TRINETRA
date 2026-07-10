@@ -61,11 +61,16 @@ pip install -e ".[dev]"
 cp .env.example .env          # fill in self-hosted endpoints when the GPU is running
 bash scripts/download_data.sh # requires a Kaggle API token
 make train                    # trains the L&T vehicle-finance segment
-make test
+make test                     # pytest with coverage (gate: 85%)
 make serve                    # FastAPI on http://localhost:8091
 ```
 
 Interactive API docs are served at http://localhost:8091/docs.
+
+`make test` runs the suite under `pytest-cov` and fails below 85% line coverage
+over the served API and modelling library (offline-untestable data loaders,
+training pipelines and external GenAI clients are excluded; see the
+`[tool.coverage]` config in `pyproject.toml`). Current coverage is ~88%.
 
 ## Run the cockpit (frontend)
 ```bash
