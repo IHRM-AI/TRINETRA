@@ -31,15 +31,24 @@ CATEGORICAL = [
 ]
 
 
+DAYS_EMPLOYED_SENTINEL = 365243
+
+
 def build(df: pd.DataFrame) -> pd.DataFrame:
     features = pd.DataFrame(index=df.index)
     for column in NUMERIC:
         features[column] = pd.to_numeric(df[column], errors="coerce")
 
+    # 365243 (~1000 years) is the Home Credit sentinel for "not employed";
+    # left raw it would dominate any ratio built from DAYS_EMPLOYED.
+    features["DAYS_EMPLOYED"] = features["DAYS_EMPLOYED"].replace(
+        DAYS_EMPLOYED_SENTINEL, np.nan
+    )
+
     income = features["AMT_INCOME_TOTAL"].replace(0, np.nan)
     features["credit_income_ratio"] = features["AMT_CREDIT"] / income
     features["annuity_income_ratio"] = features["AMT_ANNUITY"] / income
-    features["employment_ratio"] = (df["DAYS_EMPLOYED"] / df["DAYS_BIRTH"]).replace(
+    features["employment_ratio"] = (features["DAYS_EMPLOYED"] / features["DAYS_BIRTH"]).replace(
         [np.inf, -np.inf], np.nan
     )
     features["ext_source_mean"] = df[["EXT_SOURCE_1", "EXT_SOURCE_2", "EXT_SOURCE_3"]].mean(axis=1)
