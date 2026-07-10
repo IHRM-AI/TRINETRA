@@ -3,37 +3,45 @@ from __future__ import annotations
 import json
 import logging
 
-import numpy as np
-
 from trinetra.config import settings
 from trinetra.eval.metrics import evaluate
 from trinetra.models.gbm import SegmentModel
-from trinetra.segments import SEGMENTS
+from trinetra.pipelines.splits import out_of_time_split, stratified_random_split
+from trinetra.segments import SEGMENTS, PreparedSegment
 
 logger = logging.getLogger("trinetra.zoo")
 
 
-def _split(n: int, seed: int, valid_fraction: float) -> tuple[np.ndarray, np.ndarray]:
-    order = np.random.default_rng(seed).permutation(n)
-    cutoff = int(n * (1 - valid_fraction))
-    return order[:cutoff], order[cutoff:]
+def _split(prepared: PreparedSegment, seed: int):
+    if prepared.order_key is not None:
+        return out_of_time_split(prepared.order_key)
+    return stratified_random_split(prepared.y, seed, kind=prepared.split_kind)
 
 
 def run() -> dict[str, object]:
     rows = []
     for name, (label, prepare) in SEGMENTS.items():
         try:
-            x, y = prepare(settings.data_dir)
+            prepared = prepare(settings.data_dir)
         except FileNotFoundError:
             logger.info("segment %s skipped (data not present)", name)
             continue
-        train_idx, valid_idx = _split(len(x), settings.random_seed, settings.validation_fraction)
-        model = SegmentModel().fit(x.iloc[train_idx], y[train_idx], x.iloc[valid_idx], y[valid_idx])
-        report = evaluate(y[valid_idx], model.predict_pd(x.iloc[valid_idx]))
-        rows.append({"segment": name, "label": label, **report.as_dict()})
+
+        split = _split(prepared, settings.random_seed)
+        x, y = prepared.x, prepared.y
+        model = SegmentModel().fit(
+            x.iloc[split.train], y[split.train], x.iloc[split.valid], y[split.valid]
+        )
+        model.calibrate(x.iloc[split.calibrate], y[split.calibrate])
+
+        report = evaluate(y[split.test], model.predict_pd(x.iloc[split.test]))
+        rows.append(
+            {"segment": name, "label": label, "split": split.kind, **report.as_dict()}
+        )
         logger.info(
-            "%-11s %-22s AUC=%.3f Gini=%.3f KS=%.3f (n=%d, default_rate=%.3f)",
-            name, label, report.auc, report.gini, report.ks, report.n, report.default_rate,
+            "%-11s %-22s [%s] AUC=%.3f Gini=%.3f KS=%.3f (n=%d, default_rate=%.3f)",
+            name, label, split.kind, report.auc, report.gini, report.ks,
+            report.n, report.default_rate,
         )
 
     result = {"segments": rows}
