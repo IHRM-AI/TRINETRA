@@ -82,6 +82,18 @@ npm run dev
 ```
 The cockpit expects the backend on `:8091` (see `make serve`). Override with `VITE_API_BASE` in `frontend/.env`.
 
+## One-command demo
+```bash
+make demo
+```
+`make demo` starts the API on `:8091` in the background, builds the cockpit, and
+serves the production bundle on http://localhost:4173 in the foreground; it stops
+the API automatically on exit (Ctrl-C). Both ports are in the default CORS
+allowlist, so no configuration is needed.
+
+Prefer two shells? Run `make serve` (API on `:8091`) in one and `make web`
+(builds and serves the cockpit on `:4173`) in the other.
+
 ## Model zoo — measured benchmark
 Each segment plugs into one interface (`src/trinetra/segments.py`) and trains the same calibrated model. Every metric is reported on a held-out **test** block that the model never saw during training, early stopping, or isotonic calibration (a strict train / valid / calibrate / test split). Run `make zoo` (writes `artifacts/zoo_benchmark.json`):
 

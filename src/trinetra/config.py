@@ -14,8 +14,10 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 # environments.
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:4173",
     "http://localhost:8091",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:4173",
     "http://127.0.0.1:8091",
     "http://ihrm-idbi-innovate-1525602521.us-east-1.elb.amazonaws.com",
 ]

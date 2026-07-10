@@ -29,6 +29,10 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.demo-api.pid
 .ipynb_checkpoints/
 dist/
 build/
