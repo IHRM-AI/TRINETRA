@@ -53,9 +53,13 @@ class AdverseMediaResult:
 # Deterministic demo fixture. Firecrawl runs on a VPN-only instance that is not
 # reachable from every demo environment, so one known borrower returns a canned,
 # clearly labelled adverse-media hit. This keeps the overlay demonstrable when
-# the live service is unreachable and is never presented as a live result.
+# the live service is unreachable and is never presented as a live result. The
+# portfolio pins its highest-risk account to this name so the overlay is one
+# click away in the cockpit.
+DEMO_BORROWER = "Shree Ganesh Textiles"
+
 DEMO_FIXTURE: dict[str, list[NewsItem]] = {
-    "shree ganesh textiles": [
+    DEMO_BORROWER.lower(): [
         NewsItem(
             url="https://demo.trinetra.local/adverse/shree-ganesh-textiles",
             title="Shree Ganesh Textiles named in loan-fraud probe (labelled demo fixture)",

@@ -5,6 +5,7 @@ import numpy as np
 from trinetra.config import settings
 from trinetra.data import ltfs
 from trinetra.features import ltfs as ltfs_features
+from trinetra.genai.adverse_media import DEMO_BORROWER
 from trinetra.models.gbm import SegmentModel
 
 # Risk-rank the monitored book into grades. Proportions reflect a managed MSME
@@ -133,6 +134,10 @@ class PortfolioService:
             )
 
         accounts.sort(key=lambda account: -account["pd"])
+        if accounts:
+            # Pin the highest-risk account to the adverse-media demo borrower so the
+            # rules-based overlay is reachable in one click during a demo.
+            accounts[0]["name"] = DEMO_BORROWER
         high_risk = [a for a in accounts if a["grade"] in {"D", "E"}]
         action_counts: dict[str, int] = {}
         for account in accounts:
