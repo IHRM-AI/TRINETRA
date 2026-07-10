@@ -33,13 +33,15 @@ An ML + GenAI **augmentation layer** on the bank's existing rule-based Early-War
 
 The Firecrawl, OCR and vLLM layers are HTTP clients gated on `.env` endpoints. With no endpoints set the GenAI layer stays disabled and the quantitative pipeline runs standalone.
 
+See [`docs/model_card.md`](docs/model_card.md) for the bank-style model card — intended use, datasets and splits, metrics, calibration, limitations, and monitoring stance.
+
 ## Roadmap (not yet implemented)
 The following are on the roadmap and are **not** in the current codebase:
 - Fitted discrete-time survival / hazard model for the PD term structure (today's allocator is heuristic; `lifelines` is a dependency reserved for this).
 - Temporal behavioural model (e.g. GRU) over statement sequences.
 - Additional gradient-boosting backends beyond LightGBM.
 - True SMA-0/1/2 staging driven by days-past-due (today only static PD bands map to watch tiers in `interpret/taxonomy.py`).
-- Governance: champion-challenger, PSI drift monitoring, model cards, immutable audit log.
+- Governance: champion-challenger, PSI drift monitoring, immutable audit log (a model card ships today in `docs/model_card.md`).
 
 ## Project layout
 ```
