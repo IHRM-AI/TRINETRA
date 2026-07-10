@@ -48,6 +48,36 @@ def _clean(value: object) -> object:
     return value if isinstance(value, (int, float, str)) else str(value)
 
 
+# Deterministic officer worklist rule. Grade is the primary driver; the watch
+# tier and PD refine the wording so the queue reads as a decision, not a score.
+# Mirrors RBI EWS practice: exit the tail, remediate the near-tail, monitor the
+# middle, and hold standard reviews on the performing book.
+def next_action(grade: str, watch_tier: str, pd_value: float) -> tuple[str, str]:
+    if grade == "E":
+        return (
+            "Exit / RFA review",
+            f"Grade E, {watch_tier} at {pd_value:.1%} PD — refer for resolution "
+            "and flag for a Red-Flagged-Account review.",
+        )
+    if grade == "D":
+        return (
+            "Restructure or collateral top-up",
+            f"Grade D at {pd_value:.1%} PD — seek a collateral top-up or a "
+            "restructuring proposal before the limit next comes up.",
+        )
+    if grade == "C":
+        return (
+            "Enhanced monitoring + covenant check",
+            f"Grade C ({watch_tier}) at {pd_value:.1%} PD — step up monitoring "
+            "and confirm covenant compliance this cycle.",
+        )
+    return (
+        "Standard annual review",
+        f"Grade {grade} at {pd_value:.1%} PD — no early-warning action; hold the "
+        "standard annual review.",
+    )
+
+
 class PortfolioService:
     def __init__(self, model: SegmentModel):
         self._model = model
@@ -83,6 +113,8 @@ class PortfolioService:
         for position in range(size):
             grade, tier = grades[position], tiers[position]
             exposure_cr = round(float(np.clip(rng.lognormal(0.9, 0.7), 0.4, 30)), 1)
+            pd_value = round(float(pd_values[position]), 4)
+            action, reason = next_action(grade, tier, pd_value)
             accounts.append(
                 {
                     "id": f"acc-{int(picked[position])}",
@@ -91,20 +123,27 @@ class PortfolioService:
                     "region": f"{ZONES[rng.integers(len(ZONES))]} Zonal",
                     "account": f"A/c {100000 + int(picked[position])}",
                     "exposure_cr": exposure_cr,
-                    "pd": round(float(pd_values[position]), 4),
+                    "pd": pd_value,
                     "grade": grade,
                     "watch_tier": tier,
+                    "next_action": action,
+                    "action_reason": reason,
                     "features": {key: _clean(frame.at[position, key]) for key in frame.columns},
                 }
             )
 
         accounts.sort(key=lambda account: -account["pd"])
         high_risk = [a for a in accounts if a["grade"] in {"D", "E"}]
+        action_counts: dict[str, int] = {}
+        for account in accounts:
+            label = account["next_action"]
+            action_counts[label] = action_counts.get(label, 0) + 1
         summary = {
             "n": len(accounts),
             "total_exposure_cr": round(sum(a["exposure_cr"] for a in accounts), 1),
             "high_risk": len(high_risk),
             "exposure_at_risk_cr": round(sum(a["exposure_cr"] for a in high_risk), 1),
+            "action_counts": action_counts,
             "synthetic": True,
             "note": (
                 "Names, sectors, regions and exposures are illustrative demo data. "
