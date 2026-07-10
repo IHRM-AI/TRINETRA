@@ -105,5 +105,11 @@ class PortfolioService:
             "total_exposure_cr": round(sum(a["exposure_cr"] for a in accounts), 1),
             "high_risk": len(high_risk),
             "exposure_at_risk_cr": round(sum(a["exposure_cr"] for a in high_risk), 1),
+            "synthetic": True,
+            "note": (
+                "Names, sectors, regions and exposures are illustrative demo data. "
+                "Only the probability of default is model-derived, scored on the "
+                "public L&T vehicle-finance dataset."
+            ),
         }
         return {"accounts": accounts, "summary": summary}

@@ -39,6 +39,11 @@ export function App() {
           </div>
         )}
 
+        <div className="demo-note" role="note">
+          Demo book — names and exposures are illustrative; probabilities of
+          default are model-derived on public L&amp;T data.
+        </div>
+
         <KpiStrip rows={rows} summary={summary} health={health} healthError={healthError} />
 
         {phase === "loading" ? (

@@ -749,6 +749,16 @@ table.portfolio {
   color: #8f322f;
 }
 
+.demo-note {
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid var(--line);
+  background: var(--amber-soft);
+  color: #8a5a1f;
+}
+
 .banner .retry {
   margin-left: auto;
   background: transparent;

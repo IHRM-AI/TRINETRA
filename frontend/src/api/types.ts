@@ -57,6 +57,8 @@ export interface PortfolioSummary {
   total_exposure_cr: number;
   high_risk: number;
   exposure_at_risk_cr: number;
+  synthetic?: boolean;
+  note?: string;
 }
 
 export interface PortfolioResponse {
