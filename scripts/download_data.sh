@@ -16,10 +16,6 @@ kaggle datasets download -d mamtadhaker/lt-vehicle-loan-default-prediction \
 kaggle competitions download -c home-credit-default-risk -p "$RAW_DIR/homecredit"
 unzip -qo "$RAW_DIR/homecredit"/*.zip -d "$RAW_DIR/homecredit"
 
-# Behavioral / cards: American Express default prediction (parquet mirror)
-kaggle datasets download -d raddar/amex-data-integer-dtypes-parquet-format \
-  -p "$RAW_DIR/amex" --unzip
-
 echo "Datasets downloaded to $RAW_DIR"
 
 # US mortgage: Freddie Mac Single-Family / CRT loan-level sample (manual download,
