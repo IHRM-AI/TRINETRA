@@ -930,3 +930,125 @@ table.portfolio {
   color: var(--green);
   font-weight: 700;
 }
+
+table.worklist td {
+  white-space: normal;
+  vertical-align: top;
+}
+
+.action-tag {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  letter-spacing: 0.01em;
+}
+
+.act-exit {
+  background: var(--red-soft);
+  color: #a5322f;
+  border-color: #edc8c6;
+}
+
+.act-restructure {
+  background: #fbe6d7;
+  color: #b4531d;
+  border-color: #f0c6a2;
+}
+
+.act-monitor {
+  background: var(--amber-soft);
+  color: #9a6212;
+  border-color: #f0d3a8;
+}
+
+.act-standard {
+  background: var(--green-soft);
+  color: var(--green-deep);
+  border-color: #bfe0d6;
+}
+
+.action-reason {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 5px;
+  line-height: 1.45;
+  max-width: 42ch;
+}
+
+.worklist-foot {
+  padding: 12px 18px 16px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--line-soft);
+}
+
+.adverse {
+  border: 1px solid #edc8c6;
+  background: var(--red-soft);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.adverse-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adverse-flag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a5322f;
+}
+
+.adverse-demo {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--chip-bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 3px 9px;
+}
+
+.adverse-summary {
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.adverse-sources {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adverse-sources a {
+  font-size: 11.5px;
+  color: var(--red-deep);
+  text-decoration: none;
+}
+
+.adverse-sources a:hover {
+  text-decoration: underline;
+}
+
+.adverse-note {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 9px;
+  letter-spacing: 0.02em;
+}

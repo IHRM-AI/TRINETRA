@@ -34,6 +34,8 @@ function toRow(account: Account): ScoredBorrower {
       region: account.region,
       exposure: `₹${account.exposure_cr} Cr`,
       exposureCr: account.exposure_cr,
+      nextAction: account.next_action,
+      actionReason: account.action_reason,
       features: account.features,
     },
     score: {

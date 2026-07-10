@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { KpiStrip } from "./components/KpiStrip";
 import { PortfolioTable } from "./components/PortfolioTable";
+import { NextActionWorklist } from "./components/NextActionWorklist";
 import { PortfolioHeatmap } from "./components/PortfolioHeatmap";
 import { CaptureCurve } from "./components/CaptureCurve";
 import { BorrowerDrilldown } from "./components/BorrowerDrilldown";
@@ -60,6 +61,11 @@ export function App() {
               <CaptureCurve />
             </div>
             <NewBorrowerForm addBorrower={addBorrower} onAdded={setSelectedId} />
+            <NextActionWorklist
+              rows={rows}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
             <PortfolioTable
               rows={rows}
               selectedId={selectedId}

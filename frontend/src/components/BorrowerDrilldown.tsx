@@ -4,6 +4,7 @@ import { score as scoreApi } from "../api/client";
 import type { ReasonCode } from "../api/types";
 import type { ScoredBorrower } from "../types";
 import { formatPd } from "../format";
+import { AdverseMediaBadge } from "./AdverseMediaBadge";
 import { PdTermStructure } from "./PdTermStructure";
 import { ReasonCodes } from "./ReasonCodes";
 
@@ -62,6 +63,13 @@ export function BorrowerDrilldown({ selected }: BorrowerDrilldownProps) {
           <div className="state error">{error}</div>
         ) : (
           <>
+            {score && (
+              <AdverseMediaBadge
+                borrowerName={borrower.name}
+                borrowerId={borrower.id}
+                grade={score.grade}
+              />
+            )}
             <PdTermStructure features={borrower.features} />
             <div className="dd-col-title">Why flagged — SHAP → RBI EWS reason codes</div>
             <div className="dd-col-sub">SHAP log-odds margin contribution to the score</div>

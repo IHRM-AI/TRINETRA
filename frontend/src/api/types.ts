@@ -49,6 +49,8 @@ export interface Account {
   pd: number;
   grade: Grade;
   watch_tier: string;
+  next_action: string;
+  action_reason: string;
   features: Features;
 }
 
@@ -57,8 +59,25 @@ export interface PortfolioSummary {
   total_exposure_cr: number;
   high_risk: number;
   exposure_at_risk_cr: number;
+  action_counts?: Record<string, number>;
   synthetic?: boolean;
   note?: string;
+}
+
+export interface AdverseMediaSource {
+  url: string;
+  title: string;
+}
+
+export interface AdverseMediaResponse {
+  borrower: string;
+  escalate: boolean;
+  summary: string;
+  tier_escalation: string | null;
+  is_demo_fixture: boolean;
+  service_available: boolean;
+  sources: AdverseMediaSource[];
+  overlay_note: string;
 }
 
 export interface PortfolioResponse {

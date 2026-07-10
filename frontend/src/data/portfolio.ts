@@ -8,6 +8,8 @@ export interface Borrower {
   region: string;
   exposure: string;
   exposureCr: number;
+  nextAction?: string;
+  actionReason?: string;
   features: Features;
 }
 

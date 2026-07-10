@@ -1,4 +1,5 @@
 import type {
+  AdverseMediaResponse,
   BenchmarkResponse,
   Features,
   HealthResponse,
@@ -97,4 +98,14 @@ export function getPortfolio(n = 240): Promise<PortfolioResponse> {
 
 export function getBenchmark(): Promise<BenchmarkResponse> {
   return request<BenchmarkResponse>("/benchmark");
+}
+
+export function checkAdverseMedia(
+  borrower: string,
+  grade: string,
+): Promise<AdverseMediaResponse> {
+  return request<AdverseMediaResponse>("/adverse-media", {
+    method: "POST",
+    body: JSON.stringify({ borrower, grade }),
+  });
 }
