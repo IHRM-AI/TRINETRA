@@ -123,6 +123,41 @@ def test_portfolio_carries_synthetic_flag(client: TestClient) -> None:
     assert body["summary"]["n"] == len(body["accounts"])
 
 
+def test_portfolio_carries_next_action(client: TestClient) -> None:
+    body = client.get("/portfolio?n=20").json()
+    assert "action_counts" in body["summary"]
+    for account in body["accounts"]:
+        assert account["next_action"]
+        assert account["action_reason"]
+    graded_e = [a for a in body["accounts"] if a["grade"] == "E"]
+    for account in graded_e:
+        assert account["next_action"] == "Exit / RFA review"
+
+
+def test_adverse_media_fixture_escalates(client: TestClient) -> None:
+    response = client.post("/adverse-media", json={"borrower": "Shree Ganesh Textiles", "grade": "C"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["escalate"] is True
+    assert body["is_demo_fixture"] is True
+    assert body["tier_escalation"] == "Watchlist"
+    assert body["sources"]
+    assert "separate from the PD model" in body["overlay_note"]
+
+
+def test_adverse_media_degrades_when_unconfigured(client: TestClient) -> None:
+    response = client.post("/adverse-media", json={"borrower": "Apex Auto Components"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["escalate"] is False
+    assert body["service_available"] is False
+
+
+def test_adverse_media_rejects_empty_borrower(client: TestClient) -> None:
+    response = client.post("/adverse-media", json={"borrower": "   "})
+    assert response.status_code == 422
+
+
 def test_score_returns_503_when_model_missing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(app_module, "_service", None)
     monkeypatch.setattr(app_module, "_portfolio", None)

@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from trinetra.api.portfolio import PortfolioService
 from trinetra.api.service import ScoringService
 from trinetra.config import settings
+from trinetra.genai.adverse_media import AdverseMediaOverlay
 from trinetra.genai.llm import GemmaClient
 
 logger = logging.getLogger("trinetra.api")
@@ -33,6 +34,11 @@ class MemoRequest(BaseModel):
     borrower: str
     exposure: str
     features: dict[str, float | int | str | None]
+
+
+class AdverseMediaRequest(BaseModel):
+    borrower: str
+    grade: str = "C"
 
 
 @asynccontextmanager
@@ -168,6 +174,25 @@ def memo(request: MemoRequest, _: None = Depends(require_api_key)) -> dict[str, 
     features = _validate_features(request.features, service.feature_names)
     draft = service.memo(request.borrower, request.exposure, features)
     return draft.__dict__
+
+
+@app.post("/adverse-media")
+def adverse_media(
+    request: AdverseMediaRequest, _: None = Depends(require_api_key)
+) -> dict[str, object]:
+    if not request.borrower.strip():
+        raise HTTPException(status_code=422, detail="Borrower name is required.")
+    result = AdverseMediaOverlay().check(request.borrower, grade=request.grade)
+    return {
+        "borrower": result.borrower,
+        "escalate": result.escalate,
+        "summary": result.summary,
+        "tier_escalation": result.tier_escalation,
+        "is_demo_fixture": result.is_demo_fixture,
+        "service_available": result.service_available,
+        "sources": [{"url": item.url, "title": item.title} for item in result.sources],
+        "overlay_note": "adverse-media overlay — rules-based, separate from the PD model",
+    }
 
 
 @app.get("/portfolio")
