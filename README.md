@@ -76,15 +76,15 @@ npm run dev
 The cockpit expects the backend on `:8091` (see `make serve`). Override with `VITE_API_BASE` in `frontend/.env`.
 
 ## Model zoo — measured benchmark
-Each segment plugs into one interface (`src/trinetra/segments.py`) and trains the same calibrated model. Run `make zoo` (writes `artifacts/zoo_benchmark.json`):
+Each segment plugs into one interface (`src/trinetra/segments.py`) and trains the same calibrated model. Every metric is reported on a held-out **test** block that the model never saw during training, early stopping, or isotonic calibration (a strict train / valid / calibrate / test split). Run `make zoo` (writes `artifacts/zoo_benchmark.json`):
 
-| Segment | Dataset | AUC | Gini | KS |
-|---|---|---|---|---|
-| India vehicle finance | L&T / LTFS | 0.66 | 0.32 | 0.23 |
-| Retail unsecured | Home Credit | 0.75 | 0.50 | 0.38 |
-| US mortgage | Freddie Mac (CRT loan-level) | 0.79 | 0.57 | 0.42 |
+| Segment | Dataset | Split | AUC | Gini | KS |
+|---|---|---|---|---|---|
+| India vehicle finance | L&T / LTFS | out-of-time (DisbursalDate) | 0.64 | 0.28 | 0.21 |
+| Retail unsecured | Home Credit | random (no vintage field) | 0.75 | 0.49 | 0.37 |
+| US mortgage | Freddie Mac (CRT loan-level) | out-of-time (origination date) | 0.75 | 0.50 | 0.38 |
 
-Reason codes use one shared RBI-EWS interpretation layer across every segment. Every model retrains on the bank's own book in the sandbox.
+Split type is recorded per segment in `artifacts/zoo_benchmark.json`. LTFS and Freddie use out-of-time splits (train on earlier vintages, test on later). The Home Credit public snapshot carries no absolute origination date — only relative `DAYS_*` fields — so it uses a fixed-seed stratified random split; a true out-of-time evaluation is pending real vintage-stamped data. Reason codes use one shared RBI-EWS interpretation layer across every segment, expressed as SHAP log-odds margin contributions. Every model retrains on the bank's own book in the sandbox.
 
 ## Datasets
 Public datasets only; licences restrict redistribution, so the repository ships download scripts, not data (see `scripts/download_data.sh` and `.gitignore`).

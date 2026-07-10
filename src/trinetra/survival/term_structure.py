@@ -1,3 +1,14 @@
+"""Heuristic PD term-structure allocator.
+
+This is not a fitted survival model. The available loan-level datasets carry a
+single binary 12-month default label with no month-of-default or time-to-event
+field, so a genuine discrete-time hazard model cannot be estimated from them.
+Instead, the 12-month PD produced by the segment model is spread across months
+by a fixed Gaussian-hazard weight profile whose peak shifts earlier as stress
+signals rise; the monthly marginals integrate back to the 12-month PD. A fitted
+discrete-time hazard model is tracked as roadmap work in the README.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,11 +42,12 @@ def peak_month(features: dict[str, float]) -> int:
 
 
 def build(pd_12m: float, features: dict[str, float]) -> TermStructure:
-    """Decompose a 12-month PD into a monthly marginal-default curve.
+    """Heuristically decompose a 12-month PD into a monthly marginal-default curve.
 
     The total cumulative hazard implied by the 12-month PD is distributed across
-    months by a peaked weight profile, then converted to per-month marginal
-    default probabilities. The curve integrates back to the 12-month PD.
+    months by a fixed peaked weight profile, then converted to per-month marginal
+    default probabilities. The curve integrates back to the 12-month PD. The
+    weights are hand-set, not estimated; see the module docstring.
     """
     pd_12m = float(np.clip(pd_12m, 1e-4, 0.999))
     peak = peak_month(features)
