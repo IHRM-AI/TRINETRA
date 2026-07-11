@@ -158,6 +158,62 @@ def test_adverse_media_rejects_empty_borrower(client: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_extract_returns_demo_fixture_for_sample(client: TestClient) -> None:
+    response = client.post(
+        "/extract",
+        files={"file": ("sample-acme.pdf", b"pdf-bytes", "application/pdf")},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["source"] == "demo fixture — OCR offline"
+    assert body["service_available"] is False
+    assert body["fields"]["name"] == "Acme Textiles Pvt Ltd"
+    assert body["fields"]["PERFORM_CNS.SCORE"] == 612
+
+
+def test_extract_honours_demo_flag(client: TestClient) -> None:
+    response = client.post(
+        "/extract",
+        files={"file": ("statement.pdf", b"pdf-bytes", "application/pdf")},
+        data={"demo": "true"},
+    )
+    assert response.status_code == 200
+    assert response.json()["source"] == "demo fixture — OCR offline"
+
+
+def test_extract_demo_flag_needs_no_file(client: TestClient) -> None:
+    response = client.post("/extract", data={"demo": "true"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["source"] == "demo fixture — OCR offline"
+    assert body["fields"]["name"] == "Acme Textiles Pvt Ltd"
+
+
+def test_extract_requires_file_without_demo(client: TestClient) -> None:
+    response = client.post("/extract", data={"demo": "false"})
+    assert response.status_code == 422
+
+
+def test_extract_degrades_when_ocr_offline(client: TestClient) -> None:
+    response = client.post(
+        "/extract",
+        files={"file": ("statement.pdf", b"pdf-bytes", "application/pdf")},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["fields"] == {}
+    assert body["service_available"] is False
+    assert "offline" in body["message"].lower()
+
+
+def test_extract_rejects_empty_file(client: TestClient) -> None:
+    response = client.post(
+        "/extract",
+        files={"file": ("statement.pdf", b"", "application/pdf")},
+    )
+    assert response.status_code == 422
+
+
 def test_score_returns_503_when_model_missing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(app_module, "_service", None)
     monkeypatch.setattr(app_module, "_portfolio", None)

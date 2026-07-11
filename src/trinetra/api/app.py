@@ -3,13 +3,25 @@ from __future__ import annotations
 import json
 import logging
 import math
+import tempfile
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncIterator
 
 import joblib
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -17,6 +29,7 @@ from trinetra.api.portfolio import PortfolioService
 from trinetra.api.service import ScoringService
 from trinetra.config import settings
 from trinetra.genai.adverse_media import AdverseMediaOverlay
+from trinetra.genai.extract import DEMO_FIXTURE, ExtractionResult, FormExtractor
 from trinetra.genai.llm import GemmaClient
 
 logger = logging.getLogger("trinetra.api")
@@ -193,6 +206,55 @@ def adverse_media(
         "sources": [{"url": item.url, "title": item.title} for item in result.sources],
         "overlay_note": "adverse-media overlay — rules-based, separate from the PD model",
     }
+
+
+_MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+
+
+def _extract_response(result: ExtractionResult) -> dict[str, object]:
+    return {
+        "fields": result.fields,
+        "source": result.source,
+        "message": result.message,
+        "service_available": result.service_available,
+    }
+
+
+@app.post("/extract")
+async def extract(
+    file: UploadFile | None = File(default=None),
+    demo: bool = Form(default=False),
+    _: None = Depends(require_api_key),
+) -> dict[str, object]:
+    """Extract NewBorrowerForm fields from an uploaded PDF or image.
+
+    Runs OCR to get text, then a deterministic labelled-field parser, and
+    returns only the fields it found for the officer to review before scoring.
+    Degrades gracefully: an unconfigured or unreachable OCR service does not
+    500. A recognised sample document (or demo=true) returns a clearly-labelled
+    demo fixture so the feature is always demonstrable offline, and the demo
+    path needs no uploaded bytes.
+    """
+    if demo:
+        return _extract_response(DEMO_FIXTURE)
+
+    if file is None:
+        raise HTTPException(status_code=422, detail="No file uploaded.")
+
+    payload = await file.read()
+    if not payload:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+    if len(payload) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Uploaded file exceeds the 15 MB limit.")
+
+    suffix = Path(file.filename or "upload").suffix
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as handle:
+        handle.write(payload)
+        handle.flush()
+        result = FormExtractor().extract(
+            Path(handle.name), filename=file.filename, demo=False
+        )
+    return _extract_response(result)
 
 
 @app.get("/portfolio")
