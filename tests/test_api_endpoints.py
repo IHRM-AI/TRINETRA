@@ -134,6 +134,19 @@ def test_portfolio_carries_next_action(client: TestClient) -> None:
         assert account["next_action"] == "Exit / RFA review"
 
 
+def test_portfolio_pins_shared_lifecycle_account(client: TestClient) -> None:
+    body = client.get("/portfolio?n=20").json()
+    shared = [a for a in body["accounts"] if a["id"] == "sharma-kirana"]
+    assert len(shared) == 1
+    account = shared[0]
+    assert account["name"] == "Sharma Kirana Store"
+    assert account["grade"] == "D"
+    assert account["pd"] > 0.15
+    assert "SMA" in account["watch_tier"]
+    assert "early-warning" in account["action_reason"]
+    assert body["summary"]["n"] == len(body["accounts"])
+
+
 def test_adverse_media_fixture_escalates(client: TestClient) -> None:
     response = client.post("/adverse-media", json={"borrower": "Shree Ganesh Textiles", "grade": "C"})
     assert response.status_code == 200

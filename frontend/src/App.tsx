@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { KpiStrip } from "./components/KpiStrip";
 import { PortfolioTable } from "./components/PortfolioTable";
@@ -10,19 +10,43 @@ import { CreditMemo } from "./components/CreditMemo";
 import { NewBorrowerForm } from "./components/NewBorrowerForm";
 import { usePortfolioScores } from "./usePortfolioScores";
 
+function focusParam(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("focus");
+}
+
 export function App() {
   const { rows, summary, health, healthError, phase, backendDown, reload, addBorrower } =
     usePortfolioScores();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focused] = useState<string | null>(focusParam);
+  const focusHandled = useRef(false);
+  const drilldownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (selectedId === null && rows.length > 0) {
+    if (rows.length === 0) return;
+    if (!focusHandled.current && focused) {
+      const match = rows.find((row) => row.borrower.id === focused);
+      if (match) {
+        focusHandled.current = true;
+        setSelectedId(match.borrower.id);
+        return;
+      }
+    }
+    if (selectedId === null) {
       setSelectedId(rows[0].borrower.id);
     }
-  }, [rows, selectedId]);
+  }, [rows, selectedId, focused]);
 
   const selected =
     rows.find((row) => row.borrower.id === selectedId) ?? null;
+  const focusActive = focused !== null && selectedId === focused && selected !== null;
+
+  useEffect(() => {
+    if (focusActive && drilldownRef.current) {
+      drilldownRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [focusActive]);
 
   return (
     <div className="app">
@@ -71,7 +95,10 @@ export function App() {
               selectedId={selectedId}
               onSelect={setSelectedId}
             />
-            <div className="grid-2">
+            <div
+              className={`grid-2${focusActive ? " focus-handoff" : ""}`}
+              ref={drilldownRef}
+            >
               <BorrowerDrilldown selected={selected} />
               {selected ? (
                 <CreditMemo borrower={selected.borrower} />

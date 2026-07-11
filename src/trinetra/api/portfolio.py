@@ -49,6 +49,57 @@ def _clean(value: object) -> object:
     return value if isinstance(value, (int, float, str)) else str(value)
 
 
+# Shared lifecycle account. The same MSME PARAKH onboards at origination
+# ("Sharma Kirana Store", id "sharma") is pinned into the monitored book under a
+# stable id so a scored borrower can be handed off from origination to
+# monitoring in one click. It was bankable at sanction but now shows cash-flow
+# stress — bounce count up, balances dipping, turnover softening — so opening it
+# in the cockpit surfaces an active watch. Its features use valid model keys so
+# the drill-down re-score and reason codes resolve like any other account.
+SHARED_ACCOUNT_ID = "sharma-kirana"
+SHARED_ACCOUNT = {
+    "id": SHARED_ACCOUNT_ID,
+    "name": "Sharma Kirana Store",
+    "sector": "Retail — General store",
+    "region": "Indore Zonal",
+    "account": "A/c 231045",
+    "exposure_cr": 0.6,
+    "pd": 0.187,
+    "grade": "D",
+    "watch_tier": "Watchlist / SMA-1",
+    "features": {
+        "disbursed_amount": 6000000,
+        "asset_cost": 5200000,
+        "ltv": 0.92,
+        "PERFORM_CNS.SCORE": 596,
+        "PRI.NO.OF.ACCTS": 4,
+        "PRI.ACTIVE.ACCTS": 3,
+        "PRI.OVERDUE.ACCTS": 2,
+        "PRI.CURRENT.BALANCE": 5400000,
+        "PRI.SANCTIONED.AMOUNT": 5800000,
+        "NEW.ACCTS.IN.LAST.SIX.MONTHS": 2,
+        "DELINQUENT.ACCTS.IN.LAST.SIX.MONTHS": 2,
+        "NO.OF_INQUIRIES": 4,
+        "age_years": 41,
+        "credit_history_months": 58,
+        "overdue_ratio": 0.5,
+        "primary_utilization": 0.93,
+        "Employment.Type": "Self employed",
+        "State_ID": 23,
+        "manufacturer_id": 45,
+    },
+}
+
+# Fired RBI-EWS triggers for the shared account, phrased as the origination ->
+# deterioration story. Folded into the action reason so the worklist and
+# drill-down read the active watch without a schema change.
+SHARED_ACCOUNT_TRIGGERS = (
+    "cheque bounces up to 3 this quarter from nil at sanction, "
+    "operating balance dipped below drawing power twice, "
+    "declared GST turnover down ~11% over three months"
+)
+
+
 # Deterministic officer worklist rule. Grade is the primary driver; the watch
 # tier and PD refine the wording so the queue reads as a decision, not a score.
 # Mirrors RBI EWS practice: exit the tail, remediate the near-tail, monitor the
@@ -102,6 +153,20 @@ class PortfolioService:
             grades[position], tiers[position] = GRADE_MIX[-1][1], GRADE_MIX[-1][2]
         return grades, tiers
 
+    def _shared_account(self) -> dict[str, object]:
+        account = {key: value for key, value in SHARED_ACCOUNT.items() if key != "features"}
+        account["features"] = dict(SHARED_ACCOUNT["features"])
+        pd_value = float(account["pd"])
+        action, _ = next_action(str(account["grade"]), str(account["watch_tier"]), pd_value)
+        account["next_action"] = action
+        account["action_reason"] = (
+            f"Grade {account['grade']}, {account['watch_tier']} at {pd_value:.1%} PD — "
+            f"onboarded healthy at origination, now firing early-warning triggers "
+            f"({SHARED_ACCOUNT_TRIGGERS}). Seek a collateral top-up or restructuring "
+            "before the limit next comes up."
+        )
+        return account
+
     def sample(self, n: int = 200, seed: int = 7) -> dict[str, object]:
         rng = np.random.default_rng(seed)
         size = min(n, len(self._features))
@@ -135,9 +200,11 @@ class PortfolioService:
 
         accounts.sort(key=lambda account: -account["pd"])
         if accounts:
-            # Pin the highest-risk account to the adverse-media demo borrower so the
-            # rules-based overlay is reachable in one click during a demo.
+            # Pin the highest-risk generated account to the adverse-media demo
+            # borrower so the rules-based overlay is reachable in one click.
             accounts[0]["name"] = DEMO_BORROWER
+        accounts.append(self._shared_account())
+        accounts.sort(key=lambda account: -account["pd"])
         high_risk = [a for a in accounts if a["grade"] in {"D", "E"}]
         action_counts: dict[str, int] = {}
         for account in accounts:
