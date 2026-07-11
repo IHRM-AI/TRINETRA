@@ -80,6 +80,13 @@ export interface AdverseMediaResponse {
   overlay_note: string;
 }
 
+export interface ExtractResponse {
+  fields: Record<string, string | number>;
+  source: string;
+  message: string;
+  service_available: boolean;
+}
+
 export interface PortfolioResponse {
   accounts: Account[];
   summary: PortfolioSummary;

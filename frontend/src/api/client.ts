@@ -1,6 +1,7 @@
 import type {
   AdverseMediaResponse,
   BenchmarkResponse,
+  ExtractResponse,
   Features,
   HealthResponse,
   MemoResponse,
@@ -108,4 +109,32 @@ export function checkAdverseMedia(
     method: "POST",
     body: JSON.stringify({ borrower, grade }),
   });
+}
+
+export async function extractDocument(
+  file: File | null,
+  demo = false,
+): Promise<ExtractResponse> {
+  const form = new FormData();
+  if (file) form.append("file", file);
+  form.append("demo", String(demo));
+
+  let response: Response;
+  try {
+    // Intentionally no JSON Content-Type header: the browser sets the multipart
+    // boundary for FormData. Reuses the shared BASE so it follows the deployed
+    // API base rather than a hardcoded host.
+    response = await fetch(`${BASE}/extract`, { method: "POST", body: form });
+  } catch (cause) {
+    throw new ApiError(
+      cause instanceof Error ? cause.message : "Network request failed",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    throw new ApiError(await readError(response), response.status);
+  }
+
+  return response.json() as Promise<ExtractResponse>;
 }

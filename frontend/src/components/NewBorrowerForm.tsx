@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import type { Features } from "../api/types";
+import { ApiError, extractDocument } from "../api/client";
+import type { ExtractResponse, Features } from "../api/types";
 import type { Borrower } from "../data/portfolio";
 import type { ScoredBorrower } from "../types";
 
@@ -27,6 +28,13 @@ const DEFAULTS: Field[] = [
   { key: "credit_history_months", label: "Credit history (months)", value: 90 },
 ];
 
+const FIELD_KEYS = new Set(DEFAULTS.map((f) => f.key));
+
+interface Status {
+  tone: "ok" | "warn" | "error";
+  text: string;
+}
+
 export function NewBorrowerForm({ addBorrower, onAdded }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -34,9 +42,65 @@ export function NewBorrowerForm({ addBorrower, onAdded }: Props) {
   const [exposureCr, setExposureCr] = useState(5);
   const [fields, setFields] = useState<Field[]>(DEFAULTS);
   const [busy, setBusy] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [status, setStatus] = useState<Status | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const update = (key: string, raw: string) =>
     setFields((prev) => prev.map((f) => (f.key === key ? { ...f, value: Number(raw) } : f)));
+
+  const applyExtraction = (result: ExtractResponse) => {
+    const incoming = result.fields ?? {};
+    if (typeof incoming.name === "string") setName(incoming.name);
+    if (typeof incoming.sector === "string") setSector(incoming.sector);
+    if (typeof incoming.exposureCr === "number") setExposureCr(incoming.exposureCr);
+    setFields((prev) =>
+      prev.map((f) =>
+        f.key in incoming && typeof incoming[f.key] === "number"
+          ? { ...f, value: Number(incoming[f.key]) }
+          : f,
+      ),
+    );
+
+    const populated = Object.keys(incoming).some((key) => FIELD_KEYS.has(key) || key === "name");
+    if (result.service_available) {
+      setStatus({
+        tone: "ok",
+        text: populated
+          ? "Extracted from document — best-effort, please review every value before scoring."
+          : "No fields could be read from the document. Enter the figures manually.",
+      });
+    } else {
+      setStatus({
+        tone: "warn",
+        text:
+          result.source === "ocr"
+            ? "OCR offline — no fields extracted. Enter the figures manually, or use a sample document."
+            : "OCR offline — loaded a clearly-labelled sample borrower. Review before scoring.",
+      });
+    }
+  };
+
+  const runExtraction = async (file: File | null, demo: boolean) => {
+    if (!file && !demo) return;
+    setExtracting(true);
+    setStatus({ tone: "ok", text: "Reading document…" });
+    try {
+      const result = await extractDocument(file, demo);
+      applyExtraction(result);
+    } catch (cause) {
+      const message =
+        cause instanceof ApiError && cause.status === 0
+          ? "Backend unreachable — could not read the document."
+          : cause instanceof Error
+            ? cause.message
+            : "Could not read the document.";
+      setStatus({ tone: "error", text: message });
+    } finally {
+      setExtracting(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -83,6 +147,39 @@ export function NewBorrowerForm({ addBorrower, onAdded }: Props) {
           Cancel
         </button>
       </div>
+      <div className="add-upload">
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/pdf,image/*"
+          hidden
+          onChange={(e) => runExtraction(e.target.files?.[0] ?? null, false)}
+        />
+        <button
+          type="button"
+          className="add-upload-btn"
+          onClick={() => fileInput.current?.click()}
+          disabled={extracting}
+        >
+          {extracting ? "Reading…" : "Upload document (PDF)"}
+        </button>
+        <button
+          type="button"
+          className="add-upload-link"
+          onClick={() => runExtraction(null, true)}
+          disabled={extracting}
+        >
+          Use a sample document
+        </button>
+        <span className="add-upload-hint">
+          Extraction is best-effort — review every field before scoring.
+        </span>
+      </div>
+      {status && (
+        <div className={`add-status ${status.tone}`} role="status">
+          {status.text}
+        </div>
+      )}
       <div className="add-grid">
         <label>
           Borrower name
