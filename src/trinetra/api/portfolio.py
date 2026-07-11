@@ -6,6 +6,7 @@ from trinetra.config import settings
 from trinetra.data import ltfs
 from trinetra.features import ltfs as ltfs_features
 from trinetra.genai.adverse_media import DEMO_BORROWER
+from trinetra.identity import canonical_borrower_id
 from trinetra.models.gbm import SegmentModel
 
 # Risk-rank the monitored book into grades. Proportions reflect a managed MSME
@@ -50,16 +51,20 @@ def _clean(value: object) -> object:
 
 
 # Shared lifecycle account. The same MSME PARAKH onboards at origination
-# ("Sharma Kirana Store", id "sharma") is pinned into the monitored book under a
-# stable id so a scored borrower can be handed off from origination to
-# monitoring in one click. It was bankable at sanction but now shows cash-flow
-# stress — bounce count up, balances dipping, turnover softening — so opening it
-# in the cockpit surfaces an active watch. Its features use valid model keys so
-# the drill-down re-score and reason codes resolve like any other account.
-SHARED_ACCOUNT_ID = "sharma-kirana"
+# ("Sharma Kirana Store") is pinned into the monitored book under a stable
+# canonical id so a scored borrower can be handed off from origination to
+# monitoring in one click. The id is derived from the consented GSTIN, not a
+# manual join, so PARAKH and TRINETRA agree on it independently. It was bankable
+# at sanction but now shows cash-flow stress — bounce count up, balances dipping,
+# turnover softening — so opening it in the cockpit surfaces an active watch. Its
+# features use valid model keys so the drill-down re-score and reason codes
+# resolve like any other account.
+SHARED_ACCOUNT_GSTIN = "23ABCDE1234F1Z5"
+SHARED_ACCOUNT_ID = canonical_borrower_id({"gstin": SHARED_ACCOUNT_GSTIN})
 SHARED_ACCOUNT = {
     "id": SHARED_ACCOUNT_ID,
     "name": "Sharma Kirana Store",
+    "gstin": SHARED_ACCOUNT_GSTIN,
     "sector": "Retail — General store",
     "region": "Indore Zonal",
     "account": "A/c 231045",

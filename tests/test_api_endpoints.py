@@ -135,11 +135,17 @@ def test_portfolio_carries_next_action(client: TestClient) -> None:
 
 
 def test_portfolio_pins_shared_lifecycle_account(client: TestClient) -> None:
+    from trinetra.api.portfolio import SHARED_ACCOUNT_ID
+    from trinetra.identity import canonical_borrower_id
+
     body = client.get("/portfolio?n=20").json()
-    shared = [a for a in body["accounts"] if a["id"] == "sharma-kirana"]
+    shared = [a for a in body["accounts"] if a["id"] == SHARED_ACCOUNT_ID]
     assert len(shared) == 1
     account = shared[0]
     assert account["name"] == "Sharma Kirana Store"
+    # The pinned id is the canonical borrower id derived from the consented
+    # GSTIN, so PARAKH deep-links to the same account with no manual join.
+    assert account["id"] == canonical_borrower_id({"gstin": "23ABCDE1234F1Z5"})
     assert account["grade"] == "D"
     assert account["pd"] > 0.15
     assert "SMA" in account["watch_tier"]
