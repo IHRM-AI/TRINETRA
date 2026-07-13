@@ -147,7 +147,9 @@ def test_portfolio_pins_shared_lifecycle_account(client: TestClient) -> None:
     # GSTIN, so PARAKH deep-links to the same account with no manual join.
     assert account["id"] == canonical_borrower_id({"gstin": "23ABCDE1234F1Z5"})
     assert account["grade"] == "D"
-    assert account["pd"] > 0.15
+    # PD sits in the grade-D band (interpret.taxonomy.grade_for: 0.10-0.15), so
+    # the pinned grade matches what the drill-down re-score and memo compute.
+    assert 0.10 < account["pd"] < 0.15
     assert "SMA" in account["watch_tier"]
     assert "early-warning" in account["action_reason"]
     assert body["summary"]["n"] == len(body["accounts"])
